@@ -1,5 +1,5 @@
 # Fastrex
-[![build](https://github.com/ynwd/fastrex/actions/workflows/build.yml/badge.svg)](https://github.com/ynwd/fastrex/actions/workflows/build.yml) [![Coverage Status](https://coveralls.io/repos/github/fastrodev/fastrex/badge.svg?branch=main)](https://coveralls.io/github/fastrodev/fastrex?branch=main) [![][reference]](https://pkg.go.dev/github.com/fastrodev/fastrex?tab=doc)
+[![build](https://github.com/fastrodev/fastrex/actions/workflows/build.yml/badge.svg)](https://github.com/fastrodev/fastrex/actions/workflows/build.yml) [![Coverage Status](https://coveralls.io/repos/github/fastrodev/fastrex/badge.svg?branch=main)](https://coveralls.io/github/fastrodev/fastrex?branch=main) [![][reference]](https://pkg.go.dev/github.com/fastrodev/fastrex?tab=doc)
 
 Fast and simple web application framework for Go inspired by the most popular node.js web framework: Express.js. It implements `ServeHTTP` interface so you can use express style routing. It also wraps and extends the net/http `Request` and `ResponseWriter` into an easy to read and use function signature. 
 
