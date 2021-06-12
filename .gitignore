@@ -1,0 +1,13 @@
+tmp/
+coverage.cov
+coverage.html
+coverage.out
+Makefile
+node_modules/
+web/
+www/
+gcp/
+publish.md
+template/
+static/
+serverless_function_source_code/
