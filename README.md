@@ -6,8 +6,7 @@ Fast and simple web application framework for Go inspired by the most popular no
 ## Get Started
 Init folder and install:
 ```
-mkdir app
-cd app
+mkdir app && cd app
 go mod init github.com/fastrodev/examples
 go get github.com/fastrodev/fastrex
 ```
