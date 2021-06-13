@@ -68,14 +68,14 @@ func createApp() fastrex.App {
     return app
 }
 
-func Entrypoint(w http.ResponseWriter, r *http.Request) {
+func Main(w http.ResponseWriter, r *http.Request) {
     createApp().ServeHTTP(w, r)
 }
 
 ```
 How to deploy:
 ```
-gcloud functions deploy HelloHTTP --runtime go113 --trigger-http --allow-unauthenticated
+gcloud functions deploy Main --runtime go113 --trigger-http --allow-unauthenticated
 ```
 Demo and full example: 
 ```
