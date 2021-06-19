@@ -19,7 +19,7 @@ func ExampleListen_callback() {
 	}
 	app := fastrex.New()
 	app.Get("/", helloHandler)
-	app.Listen(9000, func() {
+	app.Listen(9000, func(error) {
 		print("Listening on %v\n", 9000)
 	})
 }
@@ -39,7 +39,7 @@ func ExampleListen_TLS_callback() {
 	}
 	app := fastrex.New()
 	app.Get("/", helloHandler)
-	app.Listen(9000, "cert.pem", "key.pem", func() {
+	app.Listen(9000, "cert.pem", "key.pem", func(error) {
 		print("Listening on %v\n", 9000)
 	})
 }

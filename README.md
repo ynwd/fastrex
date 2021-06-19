@@ -17,58 +17,50 @@ package main
 import "github.com/fastrodev/fastrex"
 
 func handler(req fastrex.Request, res fastrex.Response) {
-    res.Json(`{"message":"hello"}`)
+  res.Json(`{"message":"hello"}`)
 }
 
 func createApp() fastrex.App {
-    app := fastrex.New()
-    app.Get("/", handler)
-    return app
+  app := fastrex.New()
+  app.Get("/", handler)
+  return app
 }
 
 func main() {
-    createApp().Listen(9000)
+  createApp().Listen(9000)
 }
 
 ```
 
-Run webapp:
+Run webapp locally:
 ```
 go run main.go
 ```
+## Serverless deployment
 
-Full example:
-```
-https://github.com/fastrodev/examples
-```
-
-## Cloud Function
-
-> *Cloud Functions is a serverless execution environment for building and connecting cloud services. With Cloud Functions you write simple, single-purpose functions that are attached to events emitted from your cloud infrastructure and services. Your function is triggered when an event being watched is fired.*
-
-You can deploy your codes to google cloud function. With this approach, you don't call the `Listen` function again. You must create a new function as the entry point for standard net/http `Request` and` ResponseWriter`.
+You can deploy your codes to [google cloud function](https://cloud.google.com/functions). With this approach, you don't call the `Listen` function again. You must create a new function as the entry point for standard net/http `Request` and` ResponseWriter`.
 
 ```go
 package serverless
 
 import (
-    "net/http"
+  "net/http"
 
-    "github.com/fastrodev/fastrex"
+  "github.com/fastrodev/fastrex"
 )
 
 func handler(req fastrex.Request, res fastrex.Response) {
-    res.Json(`{"message":"hello"}`)
+  res.Json(`{"message":"hello"}`)
 }
 
 func createApp() fastrex.App {
-    app := fastrex.New()
-    app.Get("/", handler)
-    return app
+  app := fastrex.New()
+  app.Get("/", handler)
+  return app
 }
 
 func Main(w http.ResponseWriter, r *http.Request) {
-    createApp().ServeHTTP(w, r)
+  createApp().ServeHTTP(w, r)
 }
 
 ```
@@ -76,11 +68,7 @@ How to deploy:
 ```
 gcloud functions deploy Main --runtime go113 --trigger-http --allow-unauthenticated
 ```
-Demo and full example: 
-```
-https://github.com/fastrodev/serverless
-```
-
+Demo and full example: [https://github.com/fastrodev/serverless](https://github.com/fastrodev/serverless)
 ## Contributing
 We appreciate your help! The main purpose of this repository is to improve performance and readability, making it faster and easier to use.
 

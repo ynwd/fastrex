@@ -28,7 +28,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 	})
 
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -48,7 +48,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			name: "success",
 			fields: fields{
 				ctx: context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r1.Context()
 						c := Cookie{}
@@ -71,7 +71,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			name: "success",
 			fields: fields{
 				ctx: context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Redirect("/oke", 200)
 					}},
@@ -86,7 +86,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			name: "success",
 			fields: fields{
 				ctx: context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Location("/oke")
 					}},
@@ -101,7 +101,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			name: "success",
 			fields: fields{
 				ctx: context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Append("x", "y")
 					}},
@@ -117,7 +117,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: tmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Render()
 					}},
@@ -133,7 +133,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: tmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						data := map[string]interface{}{
 							"title": "Cloud function app",
@@ -153,7 +153,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: tmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						data := map[string]interface{}{
 							"title": "Cloud function app",
@@ -173,7 +173,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: nilTmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Render()
 					}},
@@ -189,7 +189,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: tmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Render("", "")
 					}},
@@ -205,7 +205,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				template: tmpl,
 				ctx:      context.Background(),
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Render("", "", "")
 					}},
@@ -219,7 +219,25 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+						data := map[string]interface{}{
+							"title": "Learning Golang Web",
+							"name":  "Batman",
+						}
+						r2.Json(data)
+					}},
+				},
+			},
+			args: args{
+				res: httptest.NewRecorder(),
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						value := make(chan int)
 						r2.Status(200).
@@ -235,7 +253,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "empty cookie",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r1.Cookies()
 						r1.Cookie("cookie")
@@ -252,7 +270,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r1.Header.Set("Cookie", "cookie=xxxx")
 						r1.Cookies()
@@ -281,7 +299,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r1.WriteProxy(r2)
 					}},
@@ -295,7 +313,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						c := Cookie{}
 						expiration := time.Now().Add(365 * 24 * time.Hour)
@@ -314,7 +332,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Header().Set("x", "y")
 						r2.WriteHeader(200)
@@ -330,7 +348,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Json(7)
 					}, middlewares: m2},
@@ -344,10 +362,8 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
-						r2.Status(200)
-						r2.Json("heloo")
 					}},
 				},
 			},
@@ -359,7 +375,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Send("")
 					}},
@@ -374,7 +390,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Send("")
 					}},
@@ -391,7 +407,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Send("")
 					}},
@@ -409,7 +425,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]httpRoute{
+				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Status(200).
 							Send("ok")
@@ -428,7 +444,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &httpRouter{
+			r := &app{
 				routes:      tt.fields.routes,
 				middlewares: tt.fields.middlewares,
 				logger:      tt.fields.logger,
@@ -448,8 +464,8 @@ func TestNew(t *testing.T) {
 	}{
 		{
 			name: "success",
-			want: &httpRouter{
-				routes:      map[string]httpRoute{},
+			want: &app{
+				routes:      map[string]appRoute{},
 				middlewares: []Middleware{},
 				server:      &http.Server{},
 			},
@@ -466,11 +482,11 @@ func TestNew(t *testing.T) {
 
 func Test_httpRouter_Get(t *testing.T) {
 	t.Run("GET", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"GET:/": {path: "/", method: "GET"},
 			},
 		}
@@ -482,11 +498,11 @@ func Test_httpRouter_Get(t *testing.T) {
 
 func Test_httpRouter_Connect(t *testing.T) {
 	t.Run("CONNECT", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"CONNECT:/": {path: "/", method: "CONNECT"},
 			},
 		}
@@ -499,11 +515,11 @@ func Test_httpRouter_Connect(t *testing.T) {
 
 func Test_httpRouter_Delete(t *testing.T) {
 	t.Run("DELETE", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"DELETE:/": {path: "/", method: "DELETE"},
 			},
 		}
@@ -516,11 +532,11 @@ func Test_httpRouter_Delete(t *testing.T) {
 
 func Test_httpRouter_Head(t *testing.T) {
 	t.Run("HEAD", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"HEAD:/": {path: "/", method: "HEAD"},
 			},
 		}
@@ -533,11 +549,11 @@ func Test_httpRouter_Head(t *testing.T) {
 
 func Test_httpRouter_Put(t *testing.T) {
 	t.Run("PUT", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"PUT:/": {path: "/", method: "PUT"},
 			},
 		}
@@ -550,11 +566,11 @@ func Test_httpRouter_Put(t *testing.T) {
 
 func Test_httpRouter_Patch(t *testing.T) {
 	t.Run("PATCH", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"PATCH:/": {path: "/", method: "PATCH"},
 			},
 		}
@@ -567,11 +583,11 @@ func Test_httpRouter_Patch(t *testing.T) {
 
 func Test_httpRouter_Trace(t *testing.T) {
 	t.Run("TRACE", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"TRACE:/": {path: "/", method: "TRACE"},
 			},
 		}
@@ -584,11 +600,11 @@ func Test_httpRouter_Trace(t *testing.T) {
 
 func Test_httpRouter_Post(t *testing.T) {
 	t.Run("POST", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"POST:/": {path: "/", method: "POST"},
 			},
 		}
@@ -608,11 +624,11 @@ func Test_httpRouter_Method_withHandlerAndMiddleware(t *testing.T) {
 	middlewares = append(middlewares, middleware)
 
 	t.Run("GET", func(t *testing.T) {
-		r := &httpRouter{
-			routes: map[string]httpRoute{},
+		r := &app{
+			routes: map[string]appRoute{},
 		}
-		want := &httpRouter{
-			routes: map[string]httpRoute{
+		want := &app{
+			routes: map[string]appRoute{
 				"GET:/": {path: "/", method: "GET", handler: handler, middlewares: middlewares},
 			},
 		}
@@ -622,13 +638,13 @@ func Test_httpRouter_Method_withHandlerAndMiddleware(t *testing.T) {
 	})
 }
 
-func checkLen(got map[string]httpRoute, want map[string]httpRoute) bool {
+func checkLen(got map[string]appRoute, want map[string]appRoute) bool {
 	return len(got) == len(want)
 }
 
 func Test_httpRouter_Log(t *testing.T) {
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -646,12 +662,12 @@ func Test_httpRouter_Log(t *testing.T) {
 			name:   "success",
 			fields: fields{},
 			args:   args{},
-			want:   &httpRouter{},
+			want:   &app{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &httpRouter{
+			r := &app{
 				routes:      tt.fields.routes,
 				middlewares: tt.fields.middlewares,
 				logger:      tt.fields.logger,
@@ -666,7 +682,7 @@ func Test_httpRouter_Log(t *testing.T) {
 
 func Test_httpRouter_Ctx(t *testing.T) {
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -684,12 +700,12 @@ func Test_httpRouter_Ctx(t *testing.T) {
 			name:   "success",
 			fields: fields{},
 			args:   args{},
-			want:   &httpRouter{},
+			want:   &app{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &httpRouter{
+			r := &app{
 				routes:      tt.fields.routes,
 				middlewares: tt.fields.middlewares,
 				logger:      tt.fields.logger,
@@ -704,7 +720,7 @@ func Test_httpRouter_Ctx(t *testing.T) {
 
 func Test_httpRouter_handler(t *testing.T) {
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -722,7 +738,7 @@ func Test_httpRouter_handler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &httpRouter{
+			r := &app{
 				routes:      tt.fields.routes,
 				middlewares: tt.fields.middlewares,
 				logger:      tt.fields.logger,
@@ -888,7 +904,7 @@ func Test_httpRouter_Listen_Shutdown(t *testing.T) {
 
 func Test_httpRouter_Use(t *testing.T) {
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -920,7 +936,7 @@ func Test_httpRouter_Use(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &httpRouter{
+			r := &app{
 				routes:      tt.fields.routes,
 				middlewares: tt.fields.middlewares,
 				logger:      tt.fields.logger,

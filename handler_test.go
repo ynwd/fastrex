@@ -10,7 +10,7 @@ import (
 
 func TestHttpHandler_validate(t *testing.T) {
 	type fields struct {
-		routes      map[string]httpRoute
+		routes      map[string]appRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -98,7 +98,7 @@ func TestHttpHandler_validate(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "success",
+			name: "fail",
 			args: args{
 				path:     "/siap/:name/address/field",
 				incoming: "/oke/agus/address/field",
@@ -106,7 +106,7 @@ func TestHttpHandler_validate(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "success",
+			name: "fail",
 			args: args{
 				path:     "/siap/:name/oke/oke",
 				incoming: "/siap/agus/address/field",

@@ -81,17 +81,29 @@ type App interface {
 }
 
 type Handler func(Request, Response)
-type httpRoute struct {
+
+type routerKey string
+
+type Middleware func(Request, Response, Next)
+
+type Next func(Request, Response)
+
+type ErrMiddleware struct {
+	Error error
+	Code  int
+}
+
+type appRoute struct {
 	path        string
 	method      string
 	handler     Handler
 	middlewares []Middleware
 }
 
-type httpRouter struct {
+type app struct {
 	staticFolder string
 	staticPath   string
-	routes       map[string]httpRoute
+	routes       map[string]appRoute
 	middlewares  []Middleware
 	logger       *log.Logger
 	ctx          context.Context
@@ -101,21 +113,14 @@ type httpRouter struct {
 	host         string
 }
 
-type routerKey string
-type Middleware func(Request, Response, Next)
-type Next func(Request, Response)
-type ErrMiddleware struct {
-	Error error
-	Code  int
-}
-
 const (
 	errMiddlewareKey = routerKey("error")
 )
 
+// Create App instance
 func New() App {
-	return &httpRouter{
-		routes:       map[string]httpRoute{},
+	return &app{
+		routes:       map[string]appRoute{},
 		middlewares:  []Middleware{},
 		server:       &http.Server{},
 		staticFolder: "",
@@ -123,109 +128,44 @@ func New() App {
 	}
 }
 
-func loopMiddleware(m []Middleware) []Middleware {
-	if len(m) == 0 {
-		return nil
-	}
-	mid := []Middleware{}
-	mid = append(mid, m...)
-	return mid
-}
-
-func (r *httpRouter) Get(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodGet, handler, loopMiddleware(middleware)}
-	key := http.MethodGet + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Connect(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodConnect, handler, loopMiddleware(middleware)}
-	key := http.MethodConnect + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Delete(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodDelete, handler, loopMiddleware(middleware)}
-	key := http.MethodDelete + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Head(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodHead, handler, loopMiddleware(middleware)}
-	key := http.MethodHead + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Put(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodPut, handler, loopMiddleware(middleware)}
-	key := http.MethodPut + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Patch(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodPatch, handler, loopMiddleware(middleware)}
-	key := http.MethodPatch + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Trace(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodTrace, handler, loopMiddleware(middleware)}
-	key := http.MethodTrace + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Post(path string, handler Handler, middleware ...Middleware) App {
-	route := httpRoute{path, http.MethodPost, handler, loopMiddleware(middleware)}
-	key := http.MethodPost + splitter + path
-	r.routes[key] = route
-	return r
-}
-
-func (r *httpRouter) Use(m Middleware) App {
+func (r *app) Use(m Middleware) App {
 	if m != nil {
 		r.middlewares = append(r.middlewares, m)
 	}
 	return r
 }
 
-func (r *httpRouter) Log(logger *log.Logger) App {
+func (r *app) Log(logger *log.Logger) App {
 	r.logger = logger
 	return r
 }
 
-func (r *httpRouter) Ctx(ctx context.Context) App {
+func (r *app) Ctx(ctx context.Context) App {
 	r.ctx = ctx
 	return r
 }
 
-func (r *httpRouter) handler(serverless bool) http.Handler {
+func (r *app) handler(serverless bool) http.Handler {
 	return &httpHandler{r.routes, r.middlewares, r.template, r.logger, r.ctx, r.staticFolder, r.staticPath, serverless}
 }
 
-func (r *httpRouter) Close() error {
+func (r *app) Close() error {
 	return r.server.Close()
 }
 
-func (r *httpRouter) RegisterOnShutdown(f func()) {
+func (r *app) RegisterOnShutdown(f func()) {
 	r.server.RegisterOnShutdown(f)
 }
 
-func (r *httpRouter) SetKeepAlivesEnabled(v bool) {
+func (r *app) SetKeepAlivesEnabled(v bool) {
 	r.server.SetKeepAlivesEnabled(v)
 }
 
-func (r *httpRouter) Shutdown(ctx context.Context) {
+func (r *app) Shutdown(ctx context.Context) {
 	r.server.Shutdown(ctx)
 }
 
-func (r *httpRouter) listenAndServe(addr string) error {
+func (r *app) listenAndServe(addr string) error {
 	r.server = &http.Server{
 		Addr:    addr,
 		Handler: r.handler(false),
@@ -234,7 +174,7 @@ func (r *httpRouter) listenAndServe(addr string) error {
 	return r.server.ListenAndServe()
 }
 
-func (r *httpRouter) listenAndServeTLS(addr string, certFile string, keyFile string) error {
+func (r *app) listenAndServeTLS(addr string, certFile string, keyFile string) error {
 	r.server = &http.Server{
 		Addr:    addr,
 		Handler: r.handler(false),
@@ -242,7 +182,7 @@ func (r *httpRouter) listenAndServeTLS(addr string, certFile string, keyFile str
 	return r.server.ListenAndServeTLS(certFile, keyFile)
 }
 
-func (r *httpRouter) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if len(r.filename) > 0 {
 		r.handleTemplate(true)
 	}
@@ -250,7 +190,7 @@ func (r *httpRouter) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	h.ServeHTTP(res, req)
 }
 
-func (r *httpRouter) Listen(port int, args ...interface{}) error {
+func (r *app) Listen(port int, args ...interface{}) error {
 	if len(r.filename) > 0 {
 		err := r.handleTemplate(false)
 		if err != nil {
@@ -266,8 +206,7 @@ func (r *httpRouter) Listen(port int, args ...interface{}) error {
 	}
 }
 
-func (r *httpRouter) handleTemplate(serverless bool) error {
-
+func (r *app) handleTemplate(serverless bool) error {
 	if serverless {
 		return r.handleServerlessTemplate()
 	}
@@ -281,7 +220,7 @@ func (r *httpRouter) handleTemplate(serverless bool) error {
 	return nil
 }
 
-func (r *httpRouter) handleServerlessTemplate() error {
+func (r *app) handleServerlessTemplate() error {
 	filename := make([]string, 0)
 	for _, v := range r.filename {
 		filename = append(filename, serverlessFolder+v)
@@ -295,7 +234,7 @@ func (r *httpRouter) handleServerlessTemplate() error {
 	return nil
 }
 
-func (r *httpRouter) handleNonTLS(port int, args []interface{}) error {
+func (r *app) handleNonTLS(port int, args []interface{}) error {
 	var (
 		addr     string
 		callback func(err error)
@@ -330,7 +269,7 @@ func (r *httpRouter) handleNonTLS(port int, args []interface{}) error {
 	return err
 }
 
-func (r *httpRouter) handleTLS(port int, args []interface{}) error {
+func (r *app) handleTLS(port int, args []interface{}) error {
 	var (
 		addr     string
 		ok       bool
@@ -377,17 +316,17 @@ func (r *httpRouter) handleTLS(port int, args []interface{}) error {
 	return err
 }
 
-func (r *httpRouter) Template(filename string) App {
+func (r *app) Template(filename string) App {
 	r.filename = append(r.filename, filename)
 	return r
 }
 
-func (r *httpRouter) Host(host string) App {
+func (r *app) Host(host string) App {
 	r.host = host
 	return r
 }
 
-func (r *httpRouter) Static(folder string, path ...string) App {
+func (r *app) Static(folder string, path ...string) App {
 	r.staticFolder = folder
 	length := len(path)
 	if length == 0 {
@@ -395,5 +334,70 @@ func (r *httpRouter) Static(folder string, path ...string) App {
 	} else if length == 1 {
 		r.staticPath = path[0]
 	}
+	return r
+}
+
+func appendMiddleware(m []Middleware) []Middleware {
+	if len(m) == 0 {
+		return nil
+	}
+	mid := []Middleware{}
+	mid = append(mid, m...)
+	return mid
+}
+
+func (r *app) Get(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodGet, handler, appendMiddleware(middleware)}
+	key := http.MethodGet + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Connect(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodConnect, handler, appendMiddleware(middleware)}
+	key := http.MethodConnect + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Delete(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodDelete, handler, appendMiddleware(middleware)}
+	key := http.MethodDelete + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Head(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodHead, handler, appendMiddleware(middleware)}
+	key := http.MethodHead + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Put(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodPut, handler, appendMiddleware(middleware)}
+	key := http.MethodPut + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Patch(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodPatch, handler, appendMiddleware(middleware)}
+	key := http.MethodPatch + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Trace(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodTrace, handler, appendMiddleware(middleware)}
+	key := http.MethodTrace + splitter + path
+	r.routes[key] = route
+	return r
+}
+
+func (r *app) Post(path string, handler Handler, middleware ...Middleware) App {
+	route := appRoute{path, http.MethodPost, handler, appendMiddleware(middleware)}
+	key := http.MethodPost + splitter + path
+	r.routes[key] = route
 	return r
 }

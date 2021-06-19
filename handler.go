@@ -17,7 +17,7 @@ const (
 )
 
 type httpHandler struct {
-	routes       map[string]httpRoute
+	routes       map[string]appRoute
 	middlewares  []Middleware
 	template     *template.Template
 	logger       *log.Logger
@@ -50,11 +50,11 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
-		route.handler(*newRequest(r), newResponse(w, r, h.template))
+		route.handler(*newRequest(r, h.routes), newResponse(w, r, h.template))
 	}
 }
 
-func (h *httpHandler) handleMiddleware(route httpRoute,
+func (h *httpHandler) handleMiddleware(route appRoute,
 	w http.ResponseWriter, r *http.Request) {
 	var (
 		next     bool
@@ -81,7 +81,7 @@ func (h *httpHandler) handleMiddleware(route httpRoute,
 }
 
 func (h *httpHandler) loopMiddleware(
-	route httpRoute,
+	route appRoute,
 	middlewares []Middleware,
 	w http.ResponseWriter, r *http.Request,
 	length int) (bool, Request, Response) {
@@ -92,7 +92,7 @@ func (h *httpHandler) loopMiddleware(
 	)
 	for i := range middlewares {
 		responseMid := newResponse(w, r, h.template)
-		requestMid := newRequest(r)
+		requestMid := newRequest(r, h.routes)
 		middlewares[length-1-i](
 			*requestMid,
 			responseMid,
@@ -120,17 +120,17 @@ func (h *httpHandler) getRouteKey(incomingMethod string, incomingPath string) st
 }
 
 func (h *httpHandler) validate(path string, incoming string) bool {
-	p := h.split(path)
-	i := h.split(incoming)
+	p := split(path)
+	i := split(incoming)
 	if len(p) != len(i) {
 		return false
 	}
 	return parsePath(p, i)
 }
 
-func (h *httpHandler) split(str string) []string {
+func split(str string) []string {
 	var s []string
-	s = strings.Split(str, "/")
+	s = strings.Split(str, slash)
 	s = append(s[:0], s[1:]...)
 	return s
 }
@@ -185,5 +185,5 @@ func getPattern(s string) (str string) {
 type HandlerFunc func(Request, Response)
 
 func (f HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f(*newRequest(r), newResponse(w, r, nil))
+	f(*newRequest(r, nil), newResponse(w, r, nil))
 }

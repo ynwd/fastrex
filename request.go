@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Request struct {
@@ -33,9 +34,10 @@ type Request struct {
 	Response         *http.Response
 	ctx              context.Context
 	r                *http.Request
+	routes           map[string]appRoute
 }
 
-func newRequest(r *http.Request) *Request {
+func newRequest(r *http.Request, routes map[string]appRoute) *Request {
 	return &Request{
 		Method:           r.Method,
 		URL:              r.URL,
@@ -59,6 +61,7 @@ func newRequest(r *http.Request) *Request {
 		Response:         r.Response,
 		ctx:              r.Context(),
 		r:                r,
+		routes:           routes,
 	}
 }
 
@@ -89,7 +92,7 @@ func (h *Request) Cookie(name string) (Cookie, error) {
 }
 
 func (h *Request) Cookies() []Cookie {
-	cookies := make([]Cookie, 0)
+	cookies := []Cookie{}
 
 	for _, v := range h.r.Cookies() {
 		c := Cookie{}
@@ -134,7 +137,7 @@ func (h *Request) WriteProxy(w io.Writer) error {
 
 func (h *Request) WithContext(ctx context.Context) Request {
 	r := h.r.WithContext(ctx)
-	return *newRequest(r)
+	return *newRequest(r, h.routes)
 }
 
 func (h *Request) UserAgent() string {
@@ -151,5 +154,59 @@ func (h *Request) ErrorMiddleware(e error, code int) Request {
 		Code:  code,
 	}
 	r := h.r.WithContext(context.WithValue(h.ctx, errMiddlewareKey, err))
-	return *newRequest(r)
+	return *newRequest(r, h.routes)
+}
+
+func (h *Request) Params(name ...string) []string {
+	return h.getParams(name)
+}
+
+func (h *Request) getParams(name []string) []string {
+	params := []string{}
+	if len(name) > 1 {
+		return params
+	}
+
+	incoming := split(h.r.URL.Path)
+	length := len(incoming)
+
+	for _, route := range h.routes {
+		routeChunks := split(route.path)
+		routeLength := len(routeChunks)
+		if length != routeLength {
+			return []string{}
+		}
+
+		valid := parsePath(routeChunks, incoming)
+		if !valid {
+			return []string{}
+		}
+
+		if len(name) == 1 {
+			params = append(params, getNamedParamItem(routeChunks, incoming, name[0])...)
+		} else {
+			params = append(params, getParamItem(routeChunks, incoming)...)
+		}
+	}
+	return params
+}
+
+func getNamedParamItem(routeChunks []string, incoming []string, name string) []string {
+	params := []string{}
+	for idx, item := range routeChunks {
+		if strings.Contains(item, splitter) && strings.Contains(item, splitter+name) {
+			params = append(params, incoming[idx])
+		}
+	}
+	return params
+}
+
+func getParamItem(routeChunks []string, incoming []string) []string {
+	params := []string{}
+	for idx, item := range routeChunks {
+		if strings.Contains(item, splitter) {
+			params = append(params, incoming[idx])
+		}
+	}
+	return params
 }
