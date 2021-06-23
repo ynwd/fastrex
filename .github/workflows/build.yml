@@ -25,6 +25,7 @@ jobs:
       - run: echo "<html></html>" > template/index.html
       - run: echo "<html>{{.title}}{{.name}}</html>" > template/app.html
       - run: ls serverless_function_source_code
+      - run: cat serverless_function_source_code/index.html
       - run: go build -v ./...
       - run: go test -race -covermode atomic -coverprofile=covprofile ./...
       - name: Send coverage
