@@ -200,7 +200,10 @@ func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (r *app) Listen(port int, args ...interface{}) error {
 	if len(r.filename) > 0 {
-		return r.handleTemplate()
+		err := r.handleTemplate()
+		if err != nil {
+			return err
+		}
 	}
 	if len(args) == 0 || len(args) == 1 {
 		return r.handleNonTLS(port, args)

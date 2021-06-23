@@ -318,9 +318,9 @@ func Test_httpRouter_Listen_NonTLS_with_template(t *testing.T) {
 	}()
 }
 
-func Test_httpRouter_Listen_NonTLS_with_err_template(t *testing.T) {
+func Test_httpRouter_Listen_NonTLS_with_error_template(t *testing.T) {
 	r := New()
-	r.Template("index.html")
+	r.Template("index.htm")
 	go func() {
 		r.Listen(3000)
 	}()
