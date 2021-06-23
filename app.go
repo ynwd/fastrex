@@ -37,8 +37,10 @@ type App interface {
 	Ctx(context.Context) App
 	// Binds and listens for connections on the specified host and port.
 	Listen(port int, args ...interface{}) error
-	// ServeHTTP dispatches the request to the handler whose pattern most closely matches the request URL.
+	// ListenServerless dispatches the request to the handler whose pattern most closely matches the request URL.
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
+	// Sets app serverless
+	Serverless(bool) App
 	// Sets a host name
 	Host(string) App
 	// ParseFiles creates a new Template and parses the template definitions from the named files.
@@ -111,6 +113,7 @@ type app struct {
 	template     *template.Template
 	filename     []string
 	host         string
+	serverless   bool
 }
 
 const (
@@ -182,9 +185,14 @@ func (r *app) listenAndServeTLS(addr string, certFile string, keyFile string) er
 	return r.server.ListenAndServeTLS(certFile, keyFile)
 }
 
+func (r *app) Serverless(serverless bool) App {
+	r.serverless = serverless
+	return r
+}
+
 func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if len(r.filename) > 0 {
-		r.handleTemplate(true)
+		r.handleTemplate()
 	}
 	h := r.handler(true)
 	h.ServeHTTP(res, req)
@@ -192,7 +200,7 @@ func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (r *app) Listen(port int, args ...interface{}) error {
 	if len(r.filename) > 0 {
-		err := r.handleTemplate(false)
+		err := r.handleTemplate()
 		if err != nil {
 			return err
 		}
@@ -206,9 +214,9 @@ func (r *app) Listen(port int, args ...interface{}) error {
 	}
 }
 
-func (r *app) handleTemplate(serverless bool) error {
-	if serverless {
-		return r.handleServerlessTemplate()
+func (r *app) handleTemplate() error {
+	if r.serverless {
+		r.transform()
 	}
 
 	tmpl, err := template.ParseFiles(r.filename...)
@@ -220,18 +228,12 @@ func (r *app) handleTemplate(serverless bool) error {
 	return nil
 }
 
-func (r *app) handleServerlessTemplate() error {
+func (r *app) transform() {
 	filename := make([]string, 0)
 	for _, v := range r.filename {
 		filename = append(filename, serverlessFolder+v)
 	}
-	tmpl, err := template.ParseFiles(filename...)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	r.template = tmpl
-	return nil
+	r.filename = filename
 }
 
 func (r *app) handleNonTLS(port int, args []interface{}) error {
@@ -330,7 +332,7 @@ func (r *app) Static(folder string, path ...string) App {
 	r.staticFolder = folder
 	length := len(path)
 	if length == 0 {
-		r.staticPath = "/"
+		r.staticPath = slash
 	} else if length == 1 {
 		r.staticPath = path[0]
 	}

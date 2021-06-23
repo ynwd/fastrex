@@ -43,8 +43,10 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if h.serverless {
 			folder = serverlessFolder + h.staticFolder
 		}
-		http.StripPrefix(h.staticPath, http.FileServer(http.Dir(folder))).ServeHTTP(w, r)
-		return
+		if h.staticPath != "" && folder != "" {
+			http.StripPrefix(h.staticPath, http.FileServer(http.Dir(folder))).ServeHTTP(w, r)
+			return
+		}
 	}
 
 	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {
@@ -184,6 +186,10 @@ func getPattern(s string) (str string) {
 
 type HandlerFunc func(Request, Response)
 
-func (f HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f(*newRequest(r, nil), newResponse(w, r, nil))
+func (f HandlerFunc) ServeHTTP(
+	w http.ResponseWriter,
+	r *http.Request,
+	route map[string]appRoute,
+	template *template.Template) {
+	f(*newRequest(r, route), newResponse(w, r, template))
 }

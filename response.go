@@ -21,7 +21,7 @@ type Response interface {
 	// Write writes the data to the connection as part of an HTTP reply.
 	Write([]byte) (int, error)
 	// WriteHeader sends an HTTP response header with the provided status code.
-	WriteHeader(statusCode int)
+	WriteHeader(statusCode int) Response
 	// Sets the response’s HTTP header field to value
 	Set(string, string) Response
 	// Sets the HTTP status for the response
@@ -78,11 +78,13 @@ func (h *httpResponse) Header() http.Header {
 }
 
 func (h *httpResponse) Write(data []byte) (int, error) {
+	h.w.WriteHeader(h.s)
 	return h.w.Write(data)
 }
 
-func (h *httpResponse) WriteHeader(statusCode int) {
-	h.w.WriteHeader(statusCode)
+func (h *httpResponse) WriteHeader(statusCode int) Response {
+	h.s = statusCode
+	return h
 }
 
 func (h *httpResponse) Type(httpType string) Response {
@@ -106,19 +108,18 @@ func (h *httpResponse) Send(data interface{}) {
 		http.SetCookie(h.w, c)
 	}
 	h.w.WriteHeader(h.s)
-	h.w.Write([]byte(data.(string)))
+	d := []byte(fmt.Sprintf("%v", data))
+	h.w.Write(d)
 }
 
 func (h *httpResponse) Json(data interface{}) {
 	var jsonStr string
-
 	switch data.(type) {
 	case string, bool, int, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, complex64, complex128:
 		jsonStr = fmt.Sprintf("%v", data)
 	default:
 		jsonStr = processStruct(data)
 	}
-
 	h.w.Header().Set(HeaderContentType, MimeApplicationJson)
 	h.w.Write([]byte(jsonStr))
 }

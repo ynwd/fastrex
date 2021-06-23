@@ -9,9 +9,10 @@ type Cookie struct {
 	c http.Cookie
 }
 
-// func NewCookie() Cookie {
-// 	return Cookie{}
-// }
+func (k *Cookie) Domain(name string) *Cookie {
+	k.c.Domain = name
+	return k
+}
 
 func (k *Cookie) Name(name string) *Cookie {
 	k.c.Name = name
@@ -58,12 +59,14 @@ func (k *Cookie) Raw(raw string) *Cookie {
 	return k
 }
 
-func (k *Cookie) RawExpires() string {
-	return k.c.RawExpires
+func (k *Cookie) RawExpires(expires string) *Cookie {
+	k.c.RawExpires = expires
+	return k
 }
 
-func (k *Cookie) Unparsed() []string {
-	return k.c.Unparsed
+func (k *Cookie) Unparsed(Unparsed []string) *Cookie {
+	k.c.Unparsed = Unparsed
+	return k
 }
 
 func (k *Cookie) cookie() *http.Cookie {

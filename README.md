@@ -7,7 +7,7 @@ Fast and simple web application framework for Go inspired by the most popular no
 Init folder and install:
 ```
 mkdir app && cd app
-go mod init github.com/fastrodev/examples
+go mod init github.com/fastrodev/serverless
 go get github.com/fastrodev/fastrex
 ```
 Create main.go file:
@@ -60,7 +60,7 @@ func createApp() fastrex.App {
 }
 
 func Main(w http.ResponseWriter, r *http.Request) {
-  createApp().ServeHTTP(w, r)
+  createRouter().Serverless(true).ServeHTTP(w, r)
 }
 
 ```
@@ -68,7 +68,7 @@ How to deploy:
 ```
 gcloud functions deploy Main --runtime go113 --trigger-http --allow-unauthenticated
 ```
-Demo and full example: [https://github.com/fastrodev/serverless](https://github.com/fastrodev/serverless)
+Demo and full example: [`https://github.com/fastrodev/serverless`](https://github.com/fastrodev/serverless)
 ## Contributing
 We appreciate your help! The main purpose of this repository is to improve performance and readability, making it faster and easier to use.
 

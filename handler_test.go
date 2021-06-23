@@ -2,6 +2,7 @@ package fastrex
 
 import (
 	"context"
+	"html/template"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -129,28 +130,177 @@ func TestHttpHandler_validate(t *testing.T) {
 	}
 }
 
-func TestHandlerFunc_ServeHTTP(t *testing.T) {
+func Test_httpRouter_ServeHTTP(t *testing.T) {
+	files := make([]string, 0)
+	tmpl, _ := template.ParseFiles("template/index.html")
+	nilTmpl, _ := template.ParseFiles("template/app.html")
+	errorMiddleware := []Middleware{}
+	errorMiddleware = append(errorMiddleware, func(r1 Request, r2 Response, n Next) {
+		r1 = r1.ErrorMiddleware(http.ErrAbortHandler, http.StatusBadGateway)
+		n(r1, r2)
+	})
+
+	normalMiddleware := []Middleware{}
+	normalMiddleware = append(normalMiddleware, func(r1 Request, r2 Response, n Next) {
+		n(r1, r2)
+	})
+
+	type fields struct {
+		routes       map[string]appRoute
+		middlewares  []Middleware
+		logger       *log.Logger
+		ctx          context.Context
+		filenames    []string
+		template     *template.Template
+		staticPath   string
+		staticFolder string
+	}
 	type args struct {
-		w http.ResponseWriter
-		r *http.Request
+		res http.ResponseWriter
+		req *http.Request
 	}
 	tests := []struct {
-		name string
-		f    HandlerFunc
-		args args
+		name   string
+		fields fields
+		args   args
 	}{
 		{
 			name: "success",
-			f:    func(r1 Request, r2 Response) {},
+			fields: fields{
+				ctx: context.Background(),
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
+				},
+				logger: log.Default(),
+			},
 			args: args{
-				w: httptest.NewRecorder(),
-				r: httptest.NewRequest("GET", "/", nil),
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
+				},
+				template: tmpl,
+			},
+			args: args{
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
+				},
+				template: nilTmpl,
+			},
+			args: args{
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
+				},
+				filenames: files,
+			},
+			args: args{
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "failed",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+					}},
+				},
+			},
+			args: args{
+				req: httptest.NewRequest("GET", "/ok", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				staticFolder: "static",
+				staticPath:   "/",
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+					}},
+				},
+			},
+			args: args{
+				res: httptest.NewRecorder(),
+				req: httptest.NewRequest("GET", "/ok", nil),
+			},
+		},
+		{
+			name: "success - route middleware",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+						r2.Json(7)
+					}, middlewares: normalMiddleware},
+				},
+			},
+			args: args{
+				res: httptest.NewRecorder(),
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success - app middleware",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+						r2.Send("")
+					}},
+				},
+				middlewares: normalMiddleware,
+			},
+			args: args{
+				res: httptest.NewRecorder(),
+				req: httptest.NewRequest("GET", "/", nil),
+			},
+		},
+		{
+			name: "success",
+			fields: fields{
+				routes: map[string]appRoute{
+					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
+						r2.Send("")
+					}},
+				},
+				// logger:      log.Default(),
+				// ctx:         context.Background(),
+				middlewares: errorMiddleware,
+				// filenames:   append(files, "ok"),
+			},
+			args: args{
+				res: httptest.NewRecorder(),
+				req: httptest.NewRequest("GET", "/", nil),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.f.ServeHTTP(tt.args.w, tt.args.r)
+			r := &app{
+				staticFolder: tt.fields.staticFolder,
+				staticPath:   tt.fields.staticPath,
+				routes:       tt.fields.routes,
+				middlewares:  tt.fields.middlewares,
+				logger:       tt.fields.logger,
+				ctx:          tt.fields.ctx,
+				filename:     tt.fields.filenames,
+				template:     tt.fields.template,
+			}
+			r.ServeHTTP(tt.args.res, tt.args.req)
 		})
 	}
 }
