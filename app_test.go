@@ -2,7 +2,6 @@ package fastrex
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -318,14 +317,6 @@ func Test_httpRouter_Listen_NonTLS_with_template(t *testing.T) {
 	}()
 }
 
-func Test_httpRouter_Listen_NonTLS_with_error_template(t *testing.T) {
-	r := New()
-	r.Template("index.htm")
-	go func() {
-		r.Listen(3000)
-	}()
-}
-
 func Test_httpRouter_Listen_NonTLS_with_static(t *testing.T) {
 	r := New()
 	r.Static("static")
@@ -361,11 +352,7 @@ func Test_httpRouter_Listen_NonTLS_with_host(t *testing.T) {
 func Test_httpRouter_Listen_NonTLS_withCallback(t *testing.T) {
 	r := New()
 	go func() {
-		r.Listen(3000, func(err error) {
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		})
+		r.Listen(3000, func(err error) {})
 	}()
 }
 
@@ -385,36 +372,44 @@ func Test_httpRouter_Listen_NonTLS_withErrorCallback(t *testing.T) {
 	}
 }
 
+func Test_httpRouter_Listen_NonTLS_with_error_template(t *testing.T) {
+	r := New()
+	r.Template("index.htm")
+	wantErr := true
+	if err := r.Listen(3000); (err != nil) != wantErr {
+		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
+	}
+}
+
 func Test_httpRouter_Listen_TLS(t *testing.T) {
 	r := New()
-	go func() {
-		r.Listen(3000, "", "")
-	}()
+	wantErr := true
+	if err := r.Listen(3000, "certFile", "keyFile"); (err != nil) != wantErr {
+		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
+	}
 }
 
 func Test_httpRouter_Listen_TLS_with_host(t *testing.T) {
 	r := New()
 	r.Host("localhost")
-	go func() {
-		r.Listen(3000, "", "")
-	}()
+	wantErr := true
+	if err := r.Listen(3000, "certFile", "keyFile"); (err != nil) != wantErr {
+		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
+	}
 }
 
 func Test_httpRouter_Listen_TLS_withCallback(t *testing.T) {
 	r := New()
-	go func() {
-		r.Listen(3000, "", "", func(err error) {
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		})
-	}()
+	wantErr := true
+	if err := r.Listen(3000, "certFile", "keyFile", func(err error) {}); (err != nil) != wantErr {
+		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
+	}
 }
 
 func Test_httpRouter_Listen_TLS_withErrorKey(t *testing.T) {
 	r := New()
 	wantErr := true
-	if err := r.Listen(3000, 0, ""); (err != nil) != wantErr {
+	if err := r.Listen(3000, 0, "keyFile"); (err != nil) != wantErr {
 		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
 	}
 }
@@ -422,7 +417,7 @@ func Test_httpRouter_Listen_TLS_withErrorKey(t *testing.T) {
 func Test_httpRouter_Listen_TLS_withErrorSecret(t *testing.T) {
 	r := New()
 	wantErr := true
-	if err := r.Listen(3000, "", 0); (err != nil) != wantErr {
+	if err := r.Listen(3000, "certFile", 0); (err != nil) != wantErr {
 		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
 	}
 }
@@ -430,7 +425,7 @@ func Test_httpRouter_Listen_TLS_withErrorSecret(t *testing.T) {
 func Test_httpRouter_Listen_TLS_withErrorCallback(t *testing.T) {
 	r := New()
 	wantErr := true
-	if err := r.Listen(3000, "", "", ""); (err != nil) != wantErr {
+	if err := r.Listen(3000, "certFile", "keyFile", ""); (err != nil) != wantErr {
 		t.Errorf("httpRouter.Listen() error = %v, wantErr %v", err, wantErr)
 	}
 }
