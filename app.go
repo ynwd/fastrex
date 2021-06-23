@@ -200,10 +200,7 @@ func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 func (r *app) Listen(port int, args ...interface{}) error {
 	if len(r.filename) > 0 {
-		err := r.handleTemplate()
-		if err != nil {
-			return err
-		}
+		return r.handleTemplate()
 	}
 	if len(args) == 0 || len(args) == 1 {
 		return r.handleNonTLS(port, args)
@@ -221,7 +218,7 @@ func (r *app) handleTemplate() error {
 
 	tmpl, err := template.ParseFiles(r.filename...)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err.Error())
 		return err
 	}
 	r.template = tmpl

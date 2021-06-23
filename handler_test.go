@@ -131,7 +131,7 @@ func TestHttpHandler_validate(t *testing.T) {
 }
 
 func Test_httpRouter_ServeHTTP(t *testing.T) {
-	files := make([]string, 0)
+	files := []string{}
 	tmpl, _ := template.ParseFiles("template/index.html")
 	nilTmpl, _ := template.ParseFiles("template/app.html")
 	errorMiddleware := []Middleware{}
@@ -277,10 +277,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 						r2.Send("")
 					}},
 				},
-				// logger:      log.Default(),
-				// ctx:         context.Background(),
 				middlewares: errorMiddleware,
-				// filenames:   append(files, "ok"),
 			},
 			args: args{
 				res: httptest.NewRecorder(),

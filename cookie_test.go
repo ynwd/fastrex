@@ -1,7 +1,6 @@
 package fastrex
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -130,7 +129,6 @@ func TestCookie(t *testing.T) {
 			w := httptest.NewRecorder()
 			tt.handler.ServeHTTP(w, req, nil, nil)
 			resp := w.Result()
-			fmt.Println(resp.Header)
 			if header := resp.Header; !reflect.DeepEqual(header, tt.want) {
 				t.Errorf("Request.Params() = %v, want %v", header, tt.want)
 			}

@@ -14,10 +14,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.16
-      - name: Install goveralls
-        env:
-          GO111MODULE: off
-        run: go get github.com/mattn/goveralls
       - run: mkdir serverless_function_source_code && mkdir static && mkdir template
       - run: echo "<html></html>" > serverless_function_source_code/app.html
       - run: echo '{{define "index"}}<html>{{.title}}{{.name}}</html>{{end}}' > serverless_function_source_code/index.html
@@ -26,9 +22,11 @@ jobs:
       - run: echo "<html>{{.title}}{{.name}}</html>" > template/app.html
       - run: ls serverless_function_source_code
       - run: cat serverless_function_source_code/index.html
+      - run: go get github.com/mattn/goveralls
+      - env:
+          GO111MODULE: off
       - run: go build -v ./...
       - run: go test -race -covermode atomic -coverprofile=covprofile ./...
-      - name: Send coverage
-        env:
+      - env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: goveralls -coverprofile=covprofile -service=github
