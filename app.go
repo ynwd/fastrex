@@ -103,17 +103,17 @@ type appRoute struct {
 }
 
 type app struct {
-	staticFolder string
-	staticPath   string
-	routes       map[string]appRoute
-	middlewares  []Middleware
 	logger       *log.Logger
-	ctx          context.Context
 	server       *http.Server
 	template     *template.Template
+	ctx          context.Context
+	routes       map[string]appRoute
 	filename     []string
-	host         string
+	middlewares  []Middleware
 	serverless   bool
+	staticFolder string
+	staticPath   string
+	host         string
 }
 
 const (
