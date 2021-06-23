@@ -218,7 +218,6 @@ func (r *app) handleTemplate() error {
 
 	tmpl, err := template.ParseFiles(r.filename...)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 	r.template = tmpl
