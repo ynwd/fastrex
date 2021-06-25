@@ -79,7 +79,7 @@ func TestRequest_Params(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := newRequest(tt.incoming, tt.routes, false)
+			h := newRequest(tt.incoming, tt.routes, false, make(map[string]interface{}))
 			if got := h.Params(tt.args.name...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Request.Params() = %v, want %v", got, tt.want)
 			}
@@ -131,7 +131,7 @@ func TestRequest_Cookie(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := newRequest(tt.incoming, tt.routes, false)
+			h := newRequest(tt.incoming, tt.routes, false, map[string]interface{}{})
 			got, err := h.Cookie(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Request.Cookie() error = %v, wantErr %v", err, tt.wantErr)
@@ -171,7 +171,7 @@ func TestRequest_Cookies(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := newRequest(tt.incoming, tt.routes, false)
+			h := newRequest(tt.incoming, tt.routes, false, map[string]interface{}{})
 			if got := h.Cookies(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Request.Cookies() = %v, want %v", got, tt.want)
 			}
@@ -249,7 +249,7 @@ func TestRequest_Clone(t *testing.T) {
 
 		handler.ServeHTTP(nil, req, nil, nil)
 
-		want := *newRequest(req, nil, true)
+		want := *newRequest(req, nil, true, map[string]interface{}{})
 		want = want.WithContext(req.Context())
 
 		if !reflect.DeepEqual(got, want) {

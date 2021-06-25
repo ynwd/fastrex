@@ -160,7 +160,7 @@ func (r *app) Ctx(ctx context.Context) App {
 }
 
 func (r *app) handler(serverless bool) http.Handler {
-	return &httpHandler{r.routes, r.middlewares, r.template, r.logger, r.ctx, r.staticFolder, r.staticPath, serverless}
+	return &httpHandler{r.container, r.routes, r.middlewares, r.template, r.logger, r.ctx, r.staticFolder, r.staticPath, serverless}
 }
 
 func (r *app) Close() error {
