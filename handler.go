@@ -191,6 +191,6 @@ func (f HandlerFunc) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request,
 	route map[string]appRoute,
-	template *template.Template) {
-	f(*newRequest(r, route, true, map[string]interface{}{}), newResponse(w, r, template))
+	template *template.Template, container map[string]interface{}) {
+	f(*newRequest(r, route, true, container), newResponse(w, r, template))
 }
