@@ -25,6 +25,7 @@ type Request struct {
 	Form             url.Values
 	PostForm         url.Values
 	Routes           map[string]appRoute
+	container        map[string]interface{}
 	TransferEncoding []string
 	Close            bool
 	Serverless       bool
@@ -72,7 +73,7 @@ func (h *Request) BasicAuth() (username string, password string, ok bool) {
 // lifetime of a request and its response: obtaining a connection,
 // sending the request, and reading the response headers and body.
 func (h *Request) Clone(ctx context.Context) Request {
-	return *newRequest(h.r.Clone(ctx), h.Routes, h.Serverless)
+	return *newRequest(h.r.Clone(ctx), h.Routes, h.Serverless, h.container)
 }
 
 // FormFile returns the first file for the provided form key.
@@ -182,7 +183,7 @@ func (h *Request) WriteProxy(w io.Writer) error {
 // it's rare to need WithContext.
 func (h *Request) WithContext(ctx context.Context) Request {
 	r := h.r.WithContext(ctx)
-	return *newRequest(r, h.Routes, h.Serverless)
+	return *newRequest(r, h.Routes, h.Serverless, h.container)
 }
 
 // UserAgent returns the client's User-Agent, if sent in the request.
@@ -203,16 +204,20 @@ func (h *Request) Referer() string {
 	return h.r.Referer()
 }
 
+func (h *Request) Container(name string) interface{} {
+	return h.container[name]
+}
+
 func (h *Request) ErrorMiddleware(e error, code int) Request {
 	err := ErrMiddleware{
 		Error: e,
 		Code:  code,
 	}
 	r := h.r.WithContext(context.WithValue(h.ctx, errMiddlewareKey, err))
-	return *newRequest(r, h.Routes, h.Serverless)
+	return *newRequest(r, h.Routes, h.Serverless, h.container)
 }
 
-func newRequest(r *http.Request, routes map[string]appRoute, serverless bool) *Request {
+func newRequest(r *http.Request, routes map[string]appRoute, serverless bool, container map[string]interface{}) *Request {
 	return &Request{
 		Method:           r.Method,
 		URL:              r.URL,
@@ -238,6 +243,7 @@ func newRequest(r *http.Request, routes map[string]appRoute, serverless bool) *R
 		r:                r,
 		Routes:           routes,
 		Serverless:       serverless,
+		container:        container,
 	}
 }
 
