@@ -52,7 +52,7 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
-		route.handler(*newRequest(r, h.routes), newResponse(w, r, h.template))
+		route.handler(*newRequest(r, h.routes, h.serverless), newResponse(w, r, h.template))
 	}
 }
 
@@ -94,7 +94,7 @@ func (h *httpHandler) loopMiddleware(
 	)
 	for i := range middlewares {
 		responseMid := newResponse(w, r, h.template)
-		requestMid := newRequest(r, h.routes)
+		requestMid := newRequest(r, h.routes, h.serverless)
 		middlewares[length-1-i](
 			*requestMid,
 			responseMid,
@@ -191,5 +191,5 @@ func (f HandlerFunc) ServeHTTP(
 	r *http.Request,
 	route map[string]appRoute,
 	template *template.Template) {
-	f(*newRequest(r, route), newResponse(w, r, template))
+	f(*newRequest(r, route, true), newResponse(w, r, template))
 }

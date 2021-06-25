@@ -27,6 +27,7 @@ type Request struct {
 	Routes           map[string]appRoute
 	TransferEncoding []string
 	Close            bool
+	Serverless       bool
 	RemoteAddr       string
 	RequestURI       string
 	Host             string
@@ -71,7 +72,7 @@ func (h *Request) BasicAuth() (username string, password string, ok bool) {
 // lifetime of a request and its response: obtaining a connection,
 // sending the request, and reading the response headers and body.
 func (h *Request) Clone(ctx context.Context) Request {
-	return *newRequest(h.r.Clone(ctx), h.Routes)
+	return *newRequest(h.r.Clone(ctx), h.Routes, h.Serverless)
 }
 
 // FormFile returns the first file for the provided form key.
@@ -181,7 +182,7 @@ func (h *Request) WriteProxy(w io.Writer) error {
 // it's rare to need WithContext.
 func (h *Request) WithContext(ctx context.Context) Request {
 	r := h.r.WithContext(ctx)
-	return *newRequest(r, h.Routes)
+	return *newRequest(r, h.Routes, h.Serverless)
 }
 
 // UserAgent returns the client's User-Agent, if sent in the request.
@@ -208,10 +209,10 @@ func (h *Request) ErrorMiddleware(e error, code int) Request {
 		Code:  code,
 	}
 	r := h.r.WithContext(context.WithValue(h.ctx, errMiddlewareKey, err))
-	return *newRequest(r, h.Routes)
+	return *newRequest(r, h.Routes, h.Serverless)
 }
 
-func newRequest(r *http.Request, routes map[string]appRoute) *Request {
+func newRequest(r *http.Request, routes map[string]appRoute, serverless bool) *Request {
 	return &Request{
 		Method:           r.Method,
 		URL:              r.URL,
@@ -236,6 +237,7 @@ func newRequest(r *http.Request, routes map[string]appRoute) *Request {
 		ctx:              r.Context(),
 		r:                r,
 		Routes:           routes,
+		Serverless:       serverless,
 	}
 }
 
