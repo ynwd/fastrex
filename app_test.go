@@ -16,9 +16,12 @@ func TestNew(t *testing.T) {
 		{
 			name: "success",
 			want: &app{
-				routes:      map[string]appRoute{},
-				middlewares: []Middleware{},
-				server:      &http.Server{},
+				container:    make(map[string]interface{}),
+				routes:       map[string]appRoute{},
+				middlewares:  []Middleware{},
+				server:       &http.Server{},
+				staticFolder: "",
+				staticPath:   "",
 			},
 		},
 	}
@@ -493,6 +496,40 @@ func Test_httpRouter_Use(t *testing.T) {
 			r.Use(tt.args.m)
 			if got := len(r.middlewares); got != tt.want {
 				t.Errorf("httpRouter.Use() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_app_Container(t *testing.T) {
+	type args struct {
+		c map[string]interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want App
+	}{
+		{
+			name: "",
+			args: args{
+				c: map[string]interface{}{},
+			},
+			want: &app{
+				container:    make(map[string]interface{}),
+				routes:       map[string]appRoute{},
+				middlewares:  []Middleware{},
+				server:       &http.Server{},
+				staticFolder: "",
+				staticPath:   "",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := New()
+			if got := r.Container(tt.args.c); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("app.Container() = %v, want %v", got, tt.want)
 			}
 		})
 	}

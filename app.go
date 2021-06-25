@@ -11,6 +11,8 @@ import (
 )
 
 type App interface {
+	// Sets containers
+	Container(map[string]interface{}) App
 	// Routes HTTP GET requests to the specified path with the specified callback functions.
 	Get(string, Handler, ...Middleware) App
 	// Routes HTTP CONNECT requests to the specified path with the specified callback functions
@@ -107,6 +109,7 @@ type app struct {
 	server       *http.Server
 	template     *template.Template
 	ctx          context.Context
+	container    map[string]interface{}
 	routes       map[string]appRoute
 	filename     []string
 	middlewares  []Middleware
@@ -123,12 +126,20 @@ const (
 // Create App instance
 func New() App {
 	return &app{
+		container:    make(map[string]interface{}),
 		routes:       map[string]appRoute{},
 		middlewares:  []Middleware{},
 		server:       &http.Server{},
 		staticFolder: "",
 		staticPath:   "",
 	}
+}
+
+func (r *app) Container(c map[string]interface{}) App {
+	if c != nil {
+		r.container = c
+	}
+	return r
 }
 
 func (r *app) Use(m Middleware) App {
