@@ -149,7 +149,7 @@ func Test_httpResponse_Send(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 			w := httptest.NewRecorder()
 
-			tt.handler.ServeHTTP(w, req, nil, nil)
+			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 
 			resp := w.Result()
 			body, _ := ioutil.ReadAll(resp.Body)
@@ -199,7 +199,7 @@ func Test_httpResponse_Write(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 			w := httptest.NewRecorder()
 
-			tt.handler.ServeHTTP(w, req, nil, nil)
+			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 
 			resp := w.Result()
 			body, _ := ioutil.ReadAll(resp.Body)
@@ -237,7 +237,7 @@ func Test_httpResponse_Location(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 			w := httptest.NewRecorder()
-			tt.handler.ServeHTTP(w, req, nil, nil)
+			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 			resp := w.Result()
 			if header := resp.Header; !reflect.DeepEqual(header, tt.wantHeader) {
 				t.Errorf("Request.Params() = %v, want %v", header, tt.wantHeader)
@@ -269,7 +269,7 @@ func Test_httpResponse_Redirect(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "http://example.com/foo", nil)
 			w := httptest.NewRecorder()
-			tt.handler.ServeHTTP(w, req, nil, nil)
+			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 			resp := w.Result()
 			if status := resp.StatusCode; !reflect.DeepEqual(status, tt.wantStatus) {
 				t.Errorf("Request.Params() = %v, want %v", status, tt.wantStatus)

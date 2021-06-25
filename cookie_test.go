@@ -127,7 +127,7 @@ func TestCookie(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			w := httptest.NewRecorder()
-			tt.handler.ServeHTTP(w, req, nil, nil)
+			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 			resp := w.Result()
 			if header := resp.Header; !reflect.DeepEqual(header, tt.want) {
 				t.Errorf("Request.Params() = %v, want %v", header, tt.want)

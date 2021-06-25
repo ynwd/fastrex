@@ -208,6 +208,11 @@ func (h *Request) Container(name string) interface{} {
 	return h.container[name]
 }
 
+func (h *Request) SetContainer(name string, content interface{}) *Request {
+	h.container[name] = content
+	return h
+}
+
 func (h *Request) ErrorMiddleware(e error, code int) Request {
 	err := ErrMiddleware{
 		Error: e,
