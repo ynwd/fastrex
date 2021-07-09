@@ -501,35 +501,46 @@ func Test_httpRouter_Use(t *testing.T) {
 	}
 }
 
-func Test_app_Container(t *testing.T) {
+func Test_app_GetDependency(t *testing.T) {
 	type args struct {
-		c map[string]interface{}
+		name string
+		i    interface{}
 	}
 	tests := []struct {
-		name string
-		args args
-		want App
+		name          string
+		args          args
+		want          App
+		wantContainer interface{}
 	}{
 		{
-			name: "",
+			name: "success",
 			args: args{
-				c: map[string]interface{}{},
+				name: "app",
+				i:    "app",
 			},
 			want: &app{
-				container:    make(map[string]interface{}),
+				container: map[string]interface{}{
+					"app": "app",
+				},
 				routes:       map[string]appRoute{},
 				middlewares:  []Middleware{},
 				server:       &http.Server{},
 				staticFolder: "",
 				staticPath:   "",
 			},
+			wantContainer: "app",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := New()
-			if got := r.Container(tt.args.c); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("app.Container() = %v, want %v", got, tt.want)
+			got := r.SetDependency(tt.args.name, tt.args.i)
+			c := r.GetDependency("app")
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("app.GetDependency() = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(c, tt.wantContainer) {
+				t.Errorf("app.GetDependency() = %v, want %v", got, tt.wantContainer)
 			}
 		})
 	}

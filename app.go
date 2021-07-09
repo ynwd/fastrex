@@ -11,8 +11,10 @@ import (
 )
 
 type App interface {
-	// Sets containers
-	Container(map[string]interface{}) App
+	// Sets Dependency
+	SetDependency(name string, i interface{}) App
+	// Get Dependency
+	GetDependency(name string) interface{}
 	// Routes HTTP GET requests to the specified path with the specified callback functions.
 	Get(string, Handler, ...Middleware) App
 	// Routes HTTP CONNECT requests to the specified path with the specified callback functions
@@ -126,7 +128,7 @@ const (
 // Create App instance
 func New() App {
 	return &app{
-		container:    make(map[string]interface{}),
+		container:    map[string]interface{}{},
 		routes:       map[string]appRoute{},
 		middlewares:  []Middleware{},
 		server:       &http.Server{},
@@ -135,11 +137,13 @@ func New() App {
 	}
 }
 
-func (r *app) Container(c map[string]interface{}) App {
-	if c != nil {
-		r.container = c
-	}
+func (r *app) SetDependency(name string, i interface{}) App {
+	r.container[name] = i
 	return r
+}
+
+func (r *app) GetDependency(name string) interface{} {
+	return r.container[name]
 }
 
 func (r *app) Use(m Middleware) App {
