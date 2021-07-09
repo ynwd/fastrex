@@ -431,18 +431,18 @@ func TestRequest_ParseFrom(t *testing.T) {
 	})
 }
 
-func TestRequest_Container(t *testing.T) {
+func TestRequest_GetDependency(t *testing.T) {
 	t.Run("Container", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/", nil)
 		var d interface{}
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
-			r1.SetContainer("oke", 5)
-			d = r1.Container("oke")
+			r1.SetDependency("oke", 5)
+			d = r1.GetDependency("oke")
 		}
 
 		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
 		if d != 5 {
-			t.Errorf("Request.Container() = %v", d)
+			t.Errorf("Request.GetDependency() = %v", d)
 		}
 	})
 }

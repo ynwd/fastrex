@@ -204,11 +204,11 @@ func (h *Request) Referer() string {
 	return h.r.Referer()
 }
 
-func (h *Request) Container(name string) interface{} {
+func (h *Request) GetDependency(name string) interface{} {
 	return h.container[name]
 }
 
-func (h *Request) SetContainer(name string, content interface{}) *Request {
+func (h *Request) SetDependency(name string, content interface{}) *Request {
 	h.container[name] = content
 	return h
 }
