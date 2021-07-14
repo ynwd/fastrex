@@ -293,19 +293,15 @@ func (h *Request) getParams(name []string) []string {
 	for _, route := range h.Routes {
 		routeChunks := split(route.path)
 		routeLength := len(routeChunks)
-		if length != routeLength {
-			continue
-		}
-
-		valid := parsePath(routeChunks, incoming)
-		if !valid {
-			continue
-		}
-
-		if len(name) == 1 {
-			params = append(params, getNamedParamItem(routeChunks, incoming, name[0])...)
-		} else {
-			params = append(params, getParamItem(routeChunks, incoming)...)
+		if length == routeLength {
+			valid := parsePath(routeChunks, incoming)
+			if valid {
+				if len(name) == 1 {
+					params = append(params, getNamedParamItem(routeChunks, incoming, name[0])...)
+				} else {
+					params = append(params, getParamItem(routeChunks, incoming)...)
+				}
+			}
 		}
 	}
 	return params
