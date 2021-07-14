@@ -283,7 +283,7 @@ func (h *Request) Params(name ...string) []string {
 
 func (h *Request) getParams(name []string) []string {
 	params := []string{}
-	if len(name) > 1 {
+	if len(name) == 0 {
 		return params
 	}
 
@@ -294,12 +294,12 @@ func (h *Request) getParams(name []string) []string {
 		routeChunks := split(route.path)
 		routeLength := len(routeChunks)
 		if length != routeLength {
-			return []string{}
+			continue
 		}
 
 		valid := parsePath(routeChunks, incoming)
 		if !valid {
-			return []string{}
+			continue
 		}
 
 		if len(name) == 1 {
