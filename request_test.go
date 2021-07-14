@@ -30,8 +30,10 @@ func TestRequest_Params(t *testing.T) {
 		want     []string
 	}{
 		{
-			name:     "success",
-			args:     args{},
+			name: "success",
+			args: args{
+				name: []string{"name", "address"},
+			},
 			incoming: httptest.NewRequest("GET", "/user/agus/jakarta", nil),
 			routes: map[string]appRoute{
 				"GET:/": {path: "/user/:name/:address", method: "GET", handler: nil},
@@ -63,7 +65,8 @@ func TestRequest_Params(t *testing.T) {
 			args:     args{},
 			incoming: httptest.NewRequest("GET", "/address/jakarta/cirebon", nil),
 			routes: map[string]appRoute{
-				"GET:/": {path: "/user/:name", method: "GET", handler: nil},
+				"GET:/":     {path: "/user/:name", method: "GET", handler: nil},
+				"GET:/user": {path: "/user", method: "GET", handler: nil},
 			},
 			want: []string{},
 		},
