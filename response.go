@@ -121,6 +121,10 @@ func (h *httpResponse) Json(data interface{}) {
 		jsonStr = processStruct(data)
 	}
 	h.w.Header().Set(HeaderContentType, MimeApplicationJson)
+	if h.c != nil {
+		c := h.c.cookie()
+		http.SetCookie(h.w, c)
+	}
 	h.w.Write([]byte(jsonStr))
 }
 
@@ -148,10 +152,18 @@ func (h *httpResponse) ClearCookie(cookie Cookie) Response {
 }
 
 func (h *httpResponse) Redirect(url string, code int) {
+	if h.c != nil {
+		c := h.c.cookie()
+		http.SetCookie(h.w, c)
+	}
 	http.Redirect(h.w, h.r, url, code)
 }
 
 func (h *httpResponse) Location(path string) Response {
+	if h.c != nil {
+		c := h.c.cookie()
+		http.SetCookie(h.w, c)
+	}
 	h.w.Header().Set("Location", path)
 	return h
 }
@@ -164,6 +176,10 @@ func (h *httpResponse) Append(field string, value string) Response {
 func (h *httpResponse) Render(args ...interface{}) error {
 	if h.t == nil {
 		return errors.New("empty template")
+	}
+	if h.c != nil {
+		c := h.c.cookie()
+		http.SetCookie(h.w, c)
 	}
 	length := len(args)
 	h.w.Header().Set(HeaderContentType, MimeTextHtml)
