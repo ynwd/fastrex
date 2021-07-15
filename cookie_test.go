@@ -22,6 +22,8 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Domain("localhost").Name("name").Value("agus")
 				r2.Cookie(c)
+				c.GetDomain()
+				c.GetValue()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -34,6 +36,7 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus")
 				r2.Cookie(c)
+				c.GetName()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -46,6 +49,7 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus").HttpOnly(true)
 				r2.Cookie(c)
+				c.GetHttpOnly()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -58,6 +62,8 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus").Path("/")
 				r2.Cookie(c)
+				c.GetPath()
+				c.GetMaxAge()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -70,6 +76,8 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus").Expires(expiration)
 				r2.Cookie(c)
+				c.GetExpires()
+				c.GetRawExpires()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -82,6 +90,7 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus").Secure(true)
 				r2.Cookie(c)
+				c.GetSecure()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -94,6 +103,7 @@ func TestCookie(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus").SameSite(http.SameSiteDefaultMode)
 				r2.Cookie(c)
+				c.GetSameSite()
 				r2.Send("")
 			},
 			want: map[string][]string{
@@ -107,6 +117,7 @@ func TestCookie(t *testing.T) {
 				c.Raw("name=agus")
 				c.RawExpires("Wed, 23-Nov-2011 01:05:03 GMT")
 				r2.Cookie(c)
+				c.GetRaw()
 				r2.Send("")
 			},
 			want: map[string][]string{},
@@ -118,6 +129,7 @@ func TestCookie(t *testing.T) {
 				unparsed := []string{"ok"}
 				c.Unparsed(unparsed)
 				r2.Cookie(c)
+				c.GetUnparsed()
 				r2.Send("")
 			},
 			want: map[string][]string{},
