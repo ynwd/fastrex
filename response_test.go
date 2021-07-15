@@ -30,6 +30,9 @@ func Test_httpResponse_Send(t *testing.T) {
 		{
 			name: "json with struct",
 			handler: func(r1 Request, r2 Response) {
+				c := Cookie{}
+				c.Name("name").Value("agus")
+				r2.Cookie(c)
 				data := map[string]interface{}{
 					"title": "Learning Golang Web",
 					"name":  "Batman",
@@ -40,6 +43,7 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantStatus: 200,
 			wantHeader: map[string][]string{
 				"Content-Type": {"application/json"},
+				"Set-Cookie":   {"name=agus"},
 			},
 		},
 		{
@@ -226,10 +230,14 @@ func Test_httpResponse_Location(t *testing.T) {
 		{
 			name: "location",
 			handler: func(r1 Request, r2 Response) {
+				c := Cookie{}
+				c.Name("name").Value("agus")
+				r2.Cookie(c)
 				r2.Location("/newlocation")
 			},
 			wantHeader: map[string][]string{
-				"Location": {"/newlocation"},
+				"Location":   {"/newlocation"},
+				"Set-Cookie": {"name=agus"},
 			},
 		},
 	}
@@ -256,11 +264,15 @@ func Test_httpResponse_Redirect(t *testing.T) {
 		{
 			name: "location",
 			handler: func(r1 Request, r2 Response) {
+				c := Cookie{}
+				c.Name("name").Value("agus")
+				r2.Cookie(c)
 				r2.Redirect("/newlocation", 300)
 			},
 			wantHeader: map[string][]string{
 				"Location":     {"/newlocation"},
 				"Content-Type": {"text/html; charset=utf-8"},
+				"Set-Cookie":   {"name=agus"},
 			},
 			wantStatus: 300,
 		},
@@ -295,6 +307,9 @@ func Test_httpResponse_Render(t *testing.T) {
 			name:     "render serverless",
 			template: "app.html",
 			handler: func(r1 Request, r2 Response) {
+				c := Cookie{}
+				c.Name("name").Value("agus")
+				r2.Cookie(c)
 				r2.Render()
 			},
 			serverless: true,
@@ -302,6 +317,7 @@ func Test_httpResponse_Render(t *testing.T) {
 			wantStatus: 200,
 			wantHeader: map[string][]string{
 				"Content-Type": {"text/html; charset=UTF-8"},
+				"Set-Cookie":   {"name=agus"},
 			},
 		},
 		{
