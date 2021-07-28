@@ -185,16 +185,16 @@ func (h *httpResponse) Render(args ...interface{}) error {
 	h.w.Header().Set(HeaderContentType, MimeTextHtml)
 	if length == 0 || length == 1 {
 		if length == 0 {
-			return h.t.Execute(h.w, nil)
+			return template.Must(h.t.Clone()).Execute(h.w, nil)
 		}
-		return h.t.Execute(h.w, args[0])
+		return template.Must(h.t.Clone()).Execute(h.w, args[0])
 	} else if length == 2 {
 		name := args[0].(string)
 		data := args[1]
 		if name == "" {
 			return errors.New("empty template name")
 		}
-		return h.t.ExecuteTemplate(h.w, name, data)
+		return template.Must(h.t.Clone()).ExecuteTemplate(h.w, name, data)
 	}
 	return errors.New("invalid args")
 }

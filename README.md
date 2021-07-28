@@ -1,7 +1,7 @@
 # Fastrex
 [![][build]](https://github.com/fastrodev/fastrex/actions/workflows/build.yml) [![Coverage Status][cov]](https://coveralls.io/github/fastrodev/fastrex?branch=main) [![][reference]](https://pkg.go.dev/github.com/fastrodev/fastrex?tab=doc)
 
-[Fast](https://github.com/fastrodev/benchmarks#fastrex) and simple web application framework for Go inspired by the most popular node.js web framework: Express.js. It implements `ServeHTTP` interface so you can use express style routing. It also wraps and extends the net/http `Request` and `ResponseWriter` into an easy to read and use function signature. 
+Fast and simple web application framework for Go inspired by the most popular node.js web framework: Express.js. It implements `ServeHTTP` interface so you can use express style routing. It also wraps and extends the net/http `Request` and `ResponseWriter` into an easy to read and use function signature. 
 
 ## Get Started
 Init folder and install:
@@ -60,7 +60,7 @@ func createApp() fastrex.App {
 }
 
 func Main(w http.ResponseWriter, r *http.Request) {
-  createRouter().Serverless(true).ServeHTTP(w, r)
+  createApp().Serverless(true).ServeHTTP(w, r)
 }
 
 ```
@@ -69,6 +69,17 @@ How to deploy:
 gcloud functions deploy Main --runtime go113 --trigger-http --allow-unauthenticated
 ```
 Demo and full example: [`https://github.com/fastrodev/serverless`](https://github.com/fastrodev/serverless)
+
+## Benchmarks
+|Module|Requests/sec|Transfer/sec|
+|--|--:|--:|
+|Fastrex|95249.11|10.99MB|
+|Go std|88700.49|10.83MB|
+|Node std|50696.05|6.48MB|
+|Express|9006.68|2.05MB|
+
+Benchmarks repository: [`https://github.com/fastrodev/benchmarks`](https://github.com/fastrodev/benchmarks)
+
 ## Contributing
 We appreciate your help! The main purpose of this repository is to improve performance and readability, making it faster and easier to use.
 
