@@ -48,7 +48,7 @@ type App interface {
 	// Sets a host name
 	Host(string) App
 	// ParseFiles creates a new Template and parses the template definitions from the named files.
-	Template(path string) App
+	Template(path ...string) App
 	// SetKeepAlivesEnabled controls whether HTTP keep-alives are enabled. By default, keep-alives
 	// are always enabled. Only very resource-constrained environments or servers in the process of
 	// shutting down should disable them.
@@ -332,8 +332,8 @@ func (r *app) handleTLS(port int, args []interface{}) error {
 	return err
 }
 
-func (r *app) Template(filename string) App {
-	r.filename = append(r.filename, filename)
+func (r *app) Template(filename ...string) App {
+	r.filename = filename
 	return r
 }
 
