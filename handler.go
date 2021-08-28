@@ -44,7 +44,8 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if h.serverless {
 			folder = serverlessFolder + h.staticFolder
 		}
-		http.StripPrefix(h.staticPath, http.FileServer(http.Dir(folder))).ServeHTTP(w, r)
+		fileHandler := http.FileServer(http.Dir(folder))
+		http.StripPrefix(h.staticPath, fileHandler).ServeHTTP(w, r)
 		return
 	}
 
