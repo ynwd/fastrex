@@ -11,6 +11,8 @@ import (
 )
 
 type App interface {
+	// Add app module
+	Add(app App) App
 	// Sets Dependency
 	SetDependency(name string, i interface{}) App
 	// Get Dependency
@@ -107,6 +109,7 @@ type appRoute struct {
 }
 
 type app struct {
+	app          App
 	logger       *log.Logger
 	server       *http.Server
 	template     *template.Template
@@ -135,6 +138,11 @@ func New() App {
 		staticFolder: "",
 		staticPath:   "",
 	}
+}
+
+func (r *app) Add(app App) App {
+	r.app = app
+	return app
 }
 
 func (r *app) SetDependency(name string, i interface{}) App {
