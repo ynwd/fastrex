@@ -41,12 +41,18 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	route, ok := h.routes[key]
 	if !ok {
 		folder := h.staticFolder
+		path := h.staticPath
 		if h.serverless {
 			folder = serverlessFolder + h.staticFolder
 		}
+		if path == "" {
+			path = "/"
+		}
+		if folder == "" {
+			folder = "tmp"
+		}
 		fileHandler := http.FileServer(http.Dir(folder))
-		http.StripPrefix(h.staticPath, fileHandler).ServeHTTP(w, r)
-		return
+		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
 	}
 
 	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {

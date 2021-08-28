@@ -214,22 +214,23 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "failed",
+			name: "success",
 			fields: fields{
+				staticFolder: "static",
+				staticPath:   "/",
 				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 					}},
 				},
 			},
 			args: args{
+				res: httptest.NewRecorder(),
 				req: httptest.NewRequest("GET", "/ok", nil),
 			},
 		},
 		{
-			name: "success",
+			name: "failed",
 			fields: fields{
-				staticFolder: "static",
-				staticPath:   "/",
 				routes: map[string]appRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 					}},
