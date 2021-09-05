@@ -12,7 +12,7 @@ import (
 
 type App interface {
 	// Add app module
-	Add(app App) App
+	Register(app App) App
 	// Sets Dependency
 	SetDependency(name string, i interface{}) App
 	// Get Dependency
@@ -140,7 +140,7 @@ func New() App {
 	}
 }
 
-func (r *app) Add(app App) App {
+func (r *app) Register(app App) App {
 	r.app = app
 	return app
 }
