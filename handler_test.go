@@ -11,7 +11,7 @@ import (
 
 func TestHttpHandler_validate(t *testing.T) {
 	type fields struct {
-		routes      map[string]appRoute
+		routes      map[string]AppRoute
 		middlewares []Middleware
 		logger      *log.Logger
 		ctx         context.Context
@@ -146,7 +146,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 	})
 
 	type fields struct {
-		routes       map[string]appRoute
+		routes       map[string]AppRoute
 		middlewares  []Middleware
 		logger       *log.Logger
 		ctx          context.Context
@@ -168,7 +168,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			name: "success",
 			fields: fields{
 				ctx: context.Background(),
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
 				},
 				logger: log.Default(),
@@ -180,7 +180,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
 				},
 				template: tmpl,
@@ -192,7 +192,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
 				},
 				template: nilTmpl,
@@ -204,7 +204,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {}},
 				},
 				filenames: files,
@@ -218,7 +218,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 			fields: fields{
 				staticFolder: "static",
 				staticPath:   "/",
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 					}},
 				},
@@ -231,7 +231,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "failed",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 					}},
 				},
@@ -244,7 +244,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success - route middleware",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Json(7)
 					}, middlewares: normalMiddleware},
@@ -258,7 +258,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success - app middleware",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Send("")
 					}},
@@ -273,7 +273,7 @@ func Test_httpRouter_ServeHTTP(t *testing.T) {
 		{
 			name: "success",
 			fields: fields{
-				routes: map[string]appRoute{
+				routes: map[string]AppRoute{
 					"GET:/": {path: "/", method: "GET", handler: func(r1 Request, r2 Response) {
 						r2.Send("")
 					}},

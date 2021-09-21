@@ -10,9 +10,13 @@ import (
 	"strconv"
 )
 
+// Fastrex ..
+type Fastrex func(app App) App
+
+// App instance
 type App interface {
 	// Add app module
-	Register(app App) App
+	Register(app Fastrex, url ...string) App
 	// Sets Dependency
 	SetDependency(name string, i interface{}) App
 	// Get Dependency
@@ -86,22 +90,29 @@ type App interface {
 	// Once Shutdown has been called on a server, it may not be reused; future calls to methods
 	// such as Serve will return ErrServerClosed.
 	Shutdown(ctx context.Context)
+
+	Routes() map[string]AppRoute
 }
 
+// Handler ...
 type Handler func(Request, Response)
 
 type routerKey string
 
+// Middleware ...
 type Middleware func(Request, Response, Next)
 
+// Next ...
 type Next func(Request, Response)
 
+// ErrMiddleware ...
 type ErrMiddleware struct {
 	Error error
 	Code  int
 }
 
-type appRoute struct {
+// AppRoute ...
+type AppRoute struct {
 	path        string
 	method      string
 	handler     Handler
@@ -109,30 +120,32 @@ type appRoute struct {
 }
 
 type app struct {
-	app          App
 	logger       *log.Logger
 	server       *http.Server
 	template     *template.Template
 	ctx          context.Context
 	container    map[string]interface{}
-	routes       map[string]appRoute
+	routes       map[string]AppRoute
 	filename     []string
 	middlewares  []Middleware
 	serverless   bool
 	staticFolder string
 	staticPath   string
 	host         string
+	apps         map[string]App
 }
 
 const (
 	errMiddlewareKey = routerKey("error")
 )
 
-// Create App instance
+// New ...
 func New() App {
 	return &app{
+		logger:       log.Default(),
+		apps:         map[string]App{},
 		container:    map[string]interface{}{},
-		routes:       map[string]appRoute{},
+		routes:       map[string]AppRoute{},
 		middlewares:  []Middleware{},
 		server:       &http.Server{},
 		staticFolder: "",
@@ -140,9 +153,16 @@ func New() App {
 	}
 }
 
-func (r *app) Register(app App) App {
-	r.app = app
-	return app
+func (r *app) Routes() map[string]AppRoute {
+	return r.routes
+}
+
+func (r *app) Register(app Fastrex, url ...string) App {
+	p := app(New())
+	if len(url) > 0 {
+		r.apps[url[0]] = p
+	}
+	return r
 }
 
 func (r *app) SetDependency(name string, i interface{}) App {
@@ -171,8 +191,39 @@ func (r *app) Ctx(ctx context.Context) App {
 	return r
 }
 
+func (r *app) mutate() {
+	for url, app := range r.apps {
+		for _, route := range app.Routes() {
+			newPath := url + route.path
+			newKey := route.method + splitter + newPath
+			newRoute := AppRoute{
+				path:        newPath,
+				method:      route.method,
+				handler:     route.handler,
+				middlewares: route.middlewares,
+			}
+			r.routes[newKey] = newRoute
+		}
+	}
+}
+
 func (r *app) handler(serverless bool) http.Handler {
-	return &httpHandler{r.container, r.routes, r.middlewares, r.template, r.logger, r.ctx, r.staticFolder, r.staticPath, serverless}
+	if len(r.apps) > 0 {
+		r.mutate()
+	}
+
+	return &httpHandler{
+		r.apps,
+		r.container,
+		r.routes,
+		r.middlewares,
+		r.template,
+		r.logger,
+		r.ctx,
+		r.staticFolder,
+		r.staticPath,
+		serverless,
+	}
 }
 
 func (r *app) Close() error {
@@ -188,7 +239,10 @@ func (r *app) SetKeepAlivesEnabled(v bool) {
 }
 
 func (r *app) Shutdown(ctx context.Context) {
-	r.server.Shutdown(ctx)
+	err := r.server.Shutdown(ctx)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func (r *app) listenAndServe(addr string) error {
@@ -215,7 +269,10 @@ func (r *app) Serverless(serverless bool) App {
 
 func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if len(r.filename) > 0 {
-		r.handleTemplate()
+		err := r.handleTemplate()
+		if err != nil {
+			r.logger.Println(err)
+		}
 	}
 	h := r.handler(true)
 	h.ServeHTTP(res, req)
@@ -371,56 +428,56 @@ func appendMiddleware(m []Middleware) []Middleware {
 }
 
 func (r *app) Get(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodGet, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodGet, handler, appendMiddleware(middleware)}
 	key := http.MethodGet + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Connect(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodConnect, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodConnect, handler, appendMiddleware(middleware)}
 	key := http.MethodConnect + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Delete(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodDelete, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodDelete, handler, appendMiddleware(middleware)}
 	key := http.MethodDelete + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Head(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodHead, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodHead, handler, appendMiddleware(middleware)}
 	key := http.MethodHead + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Put(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodPut, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodPut, handler, appendMiddleware(middleware)}
 	key := http.MethodPut + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Patch(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodPatch, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodPatch, handler, appendMiddleware(middleware)}
 	key := http.MethodPatch + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Trace(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodTrace, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodTrace, handler, appendMiddleware(middleware)}
 	key := http.MethodTrace + splitter + path
 	r.routes[key] = route
 	return r
 }
 
 func (r *app) Post(path string, handler Handler, middleware ...Middleware) App {
-	route := appRoute{path, http.MethodPost, handler, appendMiddleware(middleware)}
+	route := AppRoute{path, http.MethodPost, handler, appendMiddleware(middleware)}
 	key := http.MethodPost + splitter + path
 	r.routes[key] = route
 	return r

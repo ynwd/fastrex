@@ -109,7 +109,10 @@ func (h *httpResponse) Send(data interface{}) {
 	}
 	h.w.WriteHeader(h.s)
 	d := []byte(fmt.Sprintf("%v", data))
-	h.w.Write(d)
+	_, err := h.w.Write(d)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (h *httpResponse) Json(data interface{}) {
@@ -125,7 +128,10 @@ func (h *httpResponse) Json(data interface{}) {
 		c := h.c.cookie()
 		http.SetCookie(h.w, c)
 	}
-	h.w.Write([]byte(jsonStr))
+	_, err := h.w.Write([]byte(jsonStr))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func processStruct(data interface{}) string {

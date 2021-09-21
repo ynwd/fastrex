@@ -26,7 +26,7 @@ func TestRequest_Params(t *testing.T) {
 		name     string
 		args     args
 		incoming *http.Request
-		routes   map[string]appRoute
+		routes   map[string]AppRoute
 		want     []string
 	}{
 		{
@@ -35,7 +35,7 @@ func TestRequest_Params(t *testing.T) {
 				name: []string{"name", "address"},
 			},
 			incoming: httptest.NewRequest("GET", "/user/agus/jakarta", nil),
-			routes: map[string]appRoute{
+			routes: map[string]AppRoute{
 				"GET:/": {path: "/user/:name/:address", method: "GET", handler: nil},
 			},
 			want: append(params, "agus", "jakarta"),
@@ -46,7 +46,7 @@ func TestRequest_Params(t *testing.T) {
 				name: []string{"name"},
 			},
 			incoming: httptest.NewRequest("GET", "/user/agus/jakarta", nil),
-			routes: map[string]appRoute{
+			routes: map[string]AppRoute{
 				"GET:/": {path: "/user/:name/:address", method: "GET", handler: nil},
 			},
 			want: append(params, "agus"),
@@ -55,7 +55,7 @@ func TestRequest_Params(t *testing.T) {
 			name:     "fail",
 			args:     args{},
 			incoming: httptest.NewRequest("GET", "/address/jakarta", nil),
-			routes: map[string]appRoute{
+			routes: map[string]AppRoute{
 				"GET:/": {path: "/user/:name", method: "GET", handler: nil},
 			},
 			want: []string{},
@@ -64,7 +64,7 @@ func TestRequest_Params(t *testing.T) {
 			name:     "fail",
 			args:     args{},
 			incoming: httptest.NewRequest("GET", "/address/jakarta/cirebon", nil),
-			routes: map[string]appRoute{
+			routes: map[string]AppRoute{
 				"GET:/":     {path: "/user/:name", method: "GET", handler: nil},
 				"GET:/user": {path: "/user", method: "GET", handler: nil},
 			},
@@ -76,7 +76,7 @@ func TestRequest_Params(t *testing.T) {
 				name: []string{"agus", "budi"},
 			},
 			incoming: httptest.NewRequest("GET", "/address/jakarta/cirebon", nil),
-			routes:   map[string]appRoute{},
+			routes:   map[string]AppRoute{},
 			want:     []string{},
 		},
 	}
@@ -107,7 +107,7 @@ func TestRequest_Cookie(t *testing.T) {
 		name     string
 		args     args
 		incoming *http.Request
-		routes   map[string]appRoute
+		routes   map[string]AppRoute
 		want     Cookie
 		wantErr  bool
 	}{
@@ -117,7 +117,7 @@ func TestRequest_Cookie(t *testing.T) {
 				name: "name",
 			},
 			incoming: incoming,
-			routes:   map[string]appRoute{},
+			routes:   map[string]AppRoute{},
 			want:     expectedCookie,
 			wantErr:  false,
 		},
@@ -127,7 +127,7 @@ func TestRequest_Cookie(t *testing.T) {
 				name: "agus",
 			},
 			incoming: incoming,
-			routes:   map[string]appRoute{},
+			routes:   map[string]AppRoute{},
 			want:     Cookie{},
 			wantErr:  true,
 		},
@@ -162,13 +162,13 @@ func TestRequest_Cookies(t *testing.T) {
 	tests := []struct {
 		name     string
 		incoming *http.Request
-		routes   map[string]appRoute
+		routes   map[string]AppRoute
 		want     []Cookie
 	}{
 		{
 			name:     "success",
 			incoming: incoming,
-			routes:   map[string]appRoute{},
+			routes:   map[string]AppRoute{},
 			want:     cookies,
 		},
 	}
@@ -314,7 +314,10 @@ func TestRequest_FormFile(t *testing.T) {
 			writer.Close()
 			t.Error(err)
 		}
-		io.Copy(part, file)
+		_, err = io.Copy(part, file)
+		if err != nil {
+			panic(err)
+		}
 		writer.Close()
 
 		req := httptest.NewRequest("POST", "/upload", body)
