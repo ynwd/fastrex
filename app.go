@@ -142,7 +142,6 @@ const (
 // New ...
 func New() App {
 	return &app{
-		logger:       log.Default(),
 		apps:         map[string]App{},
 		container:    map[string]interface{}{},
 		routes:       map[string]AppRoute{},
@@ -158,10 +157,11 @@ func (r *app) Routes() map[string]AppRoute {
 }
 
 func (r *app) Register(app Fastrex, url ...string) App {
-	p := app(New())
+	newApp := app(New())
 	if len(url) > 0 {
-		r.apps[url[0]] = p
+		r.apps[url[0]] = newApp
 	}
+	r.apps[""] = newApp
 	return r
 }
 
@@ -202,6 +202,7 @@ func (r *app) mutate() {
 				handler:     route.handler,
 				middlewares: route.middlewares,
 			}
+			fmt.Println("new-->", newKey)
 			r.routes[newKey] = newRoute
 		}
 	}
@@ -270,7 +271,7 @@ func (r *app) Serverless(serverless bool) App {
 func (r *app) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	if len(r.filename) > 0 {
 		err := r.handleTemplate()
-		if err != nil {
+		if err != nil && r.logger != nil {
 			r.logger.Println(err)
 		}
 	}
