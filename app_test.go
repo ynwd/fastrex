@@ -16,7 +16,6 @@ func TestNew(t *testing.T) {
 		{
 			name: "success",
 			want: &app{
-				logger:       log.Default(),
 				apps:         map[string]App{},
 				container:    make(map[string]interface{}),
 				routes:       map[string]AppRoute{},
