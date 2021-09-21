@@ -17,8 +17,9 @@ const (
 )
 
 type httpHandler struct {
+	apps         map[string]App
 	container    map[string]interface{}
-	routes       map[string]appRoute
+	routes       map[string]AppRoute
 	middlewares  []Middleware
 	template     *template.Template
 	logger       *log.Logger
@@ -53,16 +54,20 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		fileHandler := http.FileServer(http.Dir(folder))
 		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
+		return
 	}
 
 	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
-		route.handler(*newRequest(r, h.routes, h.serverless, h.container), newResponse(w, r, h.template))
+		route.handler(
+			*newRequest(r, h.routes, h.serverless, h.container),
+			newResponse(w, r, h.template),
+		)
 	}
 }
 
-func (h *httpHandler) handleMiddleware(route appRoute,
+func (h *httpHandler) handleMiddleware(route AppRoute,
 	w http.ResponseWriter, r *http.Request) {
 	var (
 		next     bool
@@ -89,7 +94,7 @@ func (h *httpHandler) handleMiddleware(route appRoute,
 }
 
 func (h *httpHandler) loopMiddleware(
-	route appRoute,
+	route AppRoute,
 	middlewares []Middleware,
 	w http.ResponseWriter, r *http.Request,
 	length int) (bool, Request, Response) {
@@ -190,12 +195,13 @@ func getPattern(s string) (str string) {
 	return
 }
 
+// HandlerFunc ...
 type HandlerFunc func(Request, Response)
 
 func (f HandlerFunc) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request,
-	route map[string]appRoute,
+	route map[string]AppRoute,
 	template *template.Template, container map[string]interface{}) {
 	f(*newRequest(r, route, true, container), newResponse(w, r, template))
 }

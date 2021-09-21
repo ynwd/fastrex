@@ -182,7 +182,10 @@ func Test_httpResponse_Write(t *testing.T) {
 		{
 			name: "write",
 			handler: func(r1 Request, r2 Response) {
-				r2.Write([]byte("ping"))
+				_, err := r2.Write([]byte("ping"))
+				if err != nil {
+					panic(err)
+				}
 			},
 			wantBody:   "ping",
 			wantStatus: 200,
@@ -191,7 +194,10 @@ func Test_httpResponse_Write(t *testing.T) {
 		{
 			name: "write with writeheader",
 			handler: func(r1 Request, r2 Response) {
-				r2.WriteHeader(300).Write([]byte("ping"))
+				_, err := r2.WriteHeader(300).Write([]byte("ping"))
+				if err != nil {
+					panic(err)
+				}
 			},
 			wantBody:   "ping",
 			wantStatus: 300,
@@ -310,7 +316,10 @@ func Test_httpResponse_Render(t *testing.T) {
 				c := Cookie{}
 				c.Name("name").Value("agus")
 				r2.Cookie(c)
-				r2.Render()
+				err := r2.Render()
+				if err != nil {
+					panic(err)
+				}
 			},
 			serverless: true,
 			wantBody:   "<html></html>",
@@ -328,7 +337,10 @@ func Test_httpResponse_Render(t *testing.T) {
 					"title": "app",
 					"name":  "web",
 				}
-				r2.Render(data)
+				err := r2.Render(data)
+				if err != nil {
+					panic(err)
+				}
 			},
 			serverless: true,
 			wantBody:   "<html>appweb</html>",
@@ -345,7 +357,10 @@ func Test_httpResponse_Render(t *testing.T) {
 					"title": "app",
 					"name":  "web",
 				}
-				r2.Render("index", data)
+				err := r2.Render("index", data)
+				if err != nil {
+					panic(err)
+				}
 			},
 			serverless: true,
 			wantBody:   "<html>appweb</html>",

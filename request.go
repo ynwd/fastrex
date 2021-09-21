@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Request ...
 type Request struct {
 	Cancel           <-chan struct{}
 	GetBody          func() (io.ReadCloser, error)
@@ -24,7 +25,7 @@ type Request struct {
 	ctx              context.Context
 	Form             url.Values
 	PostForm         url.Values
-	Routes           map[string]appRoute
+	Routes           map[string]AppRoute
 	container        map[string]interface{}
 	TransferEncoding []string
 	Close            bool
@@ -204,15 +205,18 @@ func (h *Request) Referer() string {
 	return h.r.Referer()
 }
 
+// GetDependency ...
 func (h *Request) GetDependency(name string) interface{} {
 	return h.container[name]
 }
 
+// SetDependency ...
 func (h *Request) SetDependency(name string, content interface{}) *Request {
 	h.container[name] = content
 	return h
 }
 
+// ErrorMiddleware ...
 func (h *Request) ErrorMiddleware(e error, code int) Request {
 	err := ErrMiddleware{
 		Error: e,
@@ -222,7 +226,7 @@ func (h *Request) ErrorMiddleware(e error, code int) Request {
 	return *newRequest(r, h.Routes, h.Serverless, h.container)
 }
 
-func newRequest(r *http.Request, routes map[string]appRoute, serverless bool, container map[string]interface{}) *Request {
+func newRequest(r *http.Request, routes map[string]AppRoute, serverless bool, container map[string]interface{}) *Request {
 	return &Request{
 		Method:           r.Method,
 		URL:              r.URL,
@@ -277,6 +281,7 @@ func (h *Request) Cookies() []Cookie {
 	return cookies
 }
 
+// Params ...
 func (h *Request) Params(name ...string) []string {
 	return h.getParams(name)
 }
