@@ -27,7 +27,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus; Domain=localhost"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; Domain=localhost"},
 			},
 		},
 		{
@@ -40,7 +41,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus"},
 			},
 		},
 		{
@@ -53,7 +55,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus; HttpOnly"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; HttpOnly"},
 			},
 		},
 		{
@@ -67,7 +70,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus; Path=/"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; Path=/"},
 			},
 		},
 		{
@@ -81,7 +85,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus; Expires=" + expirationStr},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; Expires=" + expirationStr},
 			},
 		},
 		{
@@ -94,7 +99,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus; Secure"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; Secure"},
 			},
 		},
 		{
@@ -107,7 +113,8 @@ func TestCookie(t *testing.T) {
 				r2.Send("")
 			},
 			want: map[string][]string{
-				"Set-Cookie": {"name=agus"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus"},
 			},
 		},
 		{
@@ -120,7 +127,9 @@ func TestCookie(t *testing.T) {
 				c.GetRaw()
 				r2.Send("")
 			},
-			want: map[string][]string{},
+			want: map[string][]string{
+				"Content-Type": {"text/plain; charset=utf-8"},
+			},
 		},
 		{
 			name: "Unparsed",
@@ -132,7 +141,9 @@ func TestCookie(t *testing.T) {
 				c.GetUnparsed()
 				r2.Send("")
 			},
-			want: map[string][]string{},
+			want: map[string][]string{
+				"Content-Type": {"text/plain; charset=utf-8"},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -142,7 +153,7 @@ func TestCookie(t *testing.T) {
 			tt.handler.ServeHTTP(w, req, nil, nil, map[string]interface{}{})
 			resp := w.Result()
 			if header := resp.Header; !reflect.DeepEqual(header, tt.want) {
-				t.Errorf("Request.Params() = %v, want %v", header, tt.want)
+				t.Errorf("resp = %v, want %v", header, tt.want)
 			}
 		})
 	}

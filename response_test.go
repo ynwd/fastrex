@@ -65,7 +65,9 @@ func Test_httpResponse_Send(t *testing.T) {
 			},
 			wantBody:   "ping",
 			wantStatus: 200,
-			wantHeader: map[string][]string{},
+			wantHeader: map[string][]string{
+				"Content-Type": {"text/plain; charset=utf-8"},
+			},
 		},
 		{
 			name: "send with status",
@@ -84,7 +86,8 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantBody:   "ping",
 			wantStatus: 200,
 			wantHeader: map[string][]string{
-				"X": {"x"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"X":            {"x"},
 			},
 		},
 		{
@@ -96,7 +99,8 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantBody:   "ping",
 			wantStatus: 200,
 			wantHeader: map[string][]string{
-				"X": {"x"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"X":            {"x"},
 			},
 		},
 		{
@@ -118,7 +122,8 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantBody:   "ping",
 			wantStatus: 200,
 			wantHeader: map[string][]string{
-				"X": {"y"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"X":            {"y"},
 			},
 		},
 		{
@@ -131,7 +136,8 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantBody:   "ping",
 			wantStatus: 200,
 			wantHeader: map[string][]string{
-				"Set-Cookie": {"name=agus"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus"},
 			},
 		},
 		{
@@ -144,7 +150,8 @@ func Test_httpResponse_Send(t *testing.T) {
 			wantBody:   "ping",
 			wantStatus: 200,
 			wantHeader: map[string][]string{
-				"Set-Cookie": {"name=agus; Max-Age=0"},
+				"Content-Type": {"text/plain; charset=utf-8"},
+				"Set-Cookie":   {"name=agus; Max-Age=0"},
 			},
 		},
 	}
