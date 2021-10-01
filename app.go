@@ -92,6 +92,8 @@ type App interface {
 	Shutdown(ctx context.Context)
 
 	Routes() map[string]AppRoute
+
+	Middleware() []Middleware
 }
 
 // Handler ...
@@ -152,6 +154,10 @@ func New() App {
 	}
 }
 
+func (r *app) Middleware() []Middleware {
+	return r.middlewares
+}
+
 func (r *app) Routes() map[string]AppRoute {
 	return r.routes
 }
@@ -204,6 +210,7 @@ func (r *app) mutate() {
 			}
 			r.routes[newKey] = newRoute
 		}
+		r.middlewares = append(r.middlewares, app.Middleware()...)
 	}
 }
 
