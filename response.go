@@ -107,7 +107,9 @@ func (h *httpResponse) Send(data interface{}) {
 		c := h.c.cookie()
 		http.SetCookie(h.w, c)
 	}
-	h.w.WriteHeader(h.s)
+	if h.s != http.StatusOK {
+		h.w.WriteHeader(h.s)
+	}
 	d := []byte(fmt.Sprintf("%v", data))
 	_, err := h.w.Write(d)
 	if err != nil {
