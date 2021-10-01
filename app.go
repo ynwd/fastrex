@@ -202,7 +202,6 @@ func (r *app) mutate() {
 				handler:     route.handler,
 				middlewares: route.middlewares,
 			}
-			fmt.Println("new-->", newKey)
 			r.routes[newKey] = newRoute
 		}
 	}
