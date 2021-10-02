@@ -221,6 +221,13 @@ func (r *app) mutate() {
 		r.middlewares = append(r.middlewares, app.Middleware()...)
 		r.filename = append(r.filename, app.Templates()...)
 	}
+
+	if len(r.filename) > 0 {
+		err := r.handleTemplate()
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (r *app) handler(serverless bool) http.Handler {
