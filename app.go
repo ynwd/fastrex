@@ -94,6 +94,8 @@ type App interface {
 	Routes() map[string]AppRoute
 
 	Middleware() []Middleware
+
+	Templates() []string
 }
 
 // Handler ...
@@ -152,6 +154,10 @@ func New() App {
 		staticFolder: "",
 		staticPath:   "",
 	}
+}
+
+func (r *app) Templates() []string {
+	return r.filename
 }
 
 func (r *app) Middleware() []Middleware {
@@ -213,6 +219,7 @@ func (r *app) mutate() {
 			r.routes[newKey] = newRoute
 		}
 		r.middlewares = append(r.middlewares, app.Middleware()...)
+		r.filename = append(r.filename, app.Templates()...)
 	}
 }
 
