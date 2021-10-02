@@ -8,7 +8,7 @@ Fast and simple web application framework for Go inspired by the most popular no
 * [Module](#module)
 * [Template](#template)
 * [Serverless](#serverless)
-* [Benchmark](#benchmarks)
+* [Benchmarks](#benchmarks)
 
 ## Get Started
 Init folder and install:
