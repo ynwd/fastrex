@@ -3,6 +3,13 @@
 
 Fast and simple web application framework for Go inspired by the most popular node.js web framework: Express.js. It implements `ServeHTTP` interface so you can use express style routing. It also wraps and extends the net/http `Request` and `ResponseWriter` into an easy to read and use function signature. 
 
+* [Get started](#get-started)
+* [Middleware](#middleware)
+* [Module](#module)
+* [Template](#template)
+* [Serverless](#serverless)
+* [Benchmark](#benchmarks)
+
 ## Get Started
 Init folder and install:
 ```
@@ -132,12 +139,14 @@ func main() {
 }
 
 ```
-## Template & Render
+## Template
 You can render html by create HTML template at `template` folder.
 ```html
 <html>{{.Title}}{{.Name}}</html>
 ```
-Then you add them with `Template` function. And finally, call `Render` function from handler.
+Then you add them to app with `Template` function. 
+
+And finally, call `Render` function from handler.
 ```go
 package main
 
@@ -168,7 +177,7 @@ func main() {
 }
 
 ```
-## Serverless deployment
+## Serverless
 
 You can deploy your codes to [google cloud function](https://cloud.google.com/functions). With this approach, you don't call the `Listen` function again. You must create a new function as the entry point for standard net/http `Request` and` ResponseWriter`.
 
