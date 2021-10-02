@@ -17,24 +17,156 @@ package main
 import "github.com/fastrodev/fastrex"
 
 func handler(req fastrex.Request, res fastrex.Response) {
-  res.Json(`{"message":"hello"}`)
-}
-
-func createApp() fastrex.App {
-  app := fastrex.New()
-  app.Get("/", handler)
-  return app
+	res.Send("root")
 }
 
 func main() {
-  createApp().Listen(9000)
+	app := fastrex.New()
+	app.Get("/", handler)
+	err := app.Listen(9000)
+	if err != nil {
+		panic(err)
+	}
 }
+
 
 ```
 
 Run webapp locally:
 ```
 go run main.go
+```
+
+## Middleware
+You can access `Request` and `Response` field and function before the handler process the incoming request.
+### App Middleware
+```go
+package main
+
+import "github.com/fastrodev/fastrex"
+
+func handler(req fastrex.Request, res fastrex.Response) {
+	res.Send("root")
+}
+
+func appMiddleware(req fastrex.Request, res fastrex.Response, next fastrex.Next) {
+	if req.URL.Path == "/" {
+		res.Send("appMiddleware")
+		return
+	}
+
+	next(req, res)
+}
+
+func main() {
+	app := fastrex.New()
+	app.Use(appMiddleware)
+	app.Get("/", handler)
+	err := app.Listen(9000)
+	if err != nil {
+		panic(err)
+	}
+}
+
+```
+
+### Route Middleware
+
+```go
+package main
+
+import "github.com/fastrodev/fastrex"
+
+func handler(req fastrex.Request, res fastrex.Response) {
+	res.Send("root")
+}
+
+func routeMiddleware(req fastrex.Request, res fastrex.Response, next fastrex.Next) {
+	if req.URL.Path == "/" {
+		res.Send("appMiddleware")
+		return
+	}
+}
+
+func main() {
+	app := fastrex.New()
+	app.Get("/", handler, routeMiddleware)
+	err := app.Listen(9000)
+	if err != nil {
+		panic(err)
+	}
+}
+
+```
+
+## Module
+You can group urls, routes, and handlers with `Register()`.
+```go
+package main
+
+import "github.com/fastrodev/fastrex"
+
+func module(app fastrex.App) fastrex.App {
+	moduleMiddleware := func(req fastrex.Request, res fastrex.Response, next fastrex.Next) {
+		if req.URL.Path == "/api/user" {
+			res.Send("userMiddleware")
+			return
+		}
+		next(req, res)
+	}
+	handler := func(req fastrex.Request, res fastrex.Response) {
+		res.Send("userModule")
+	}
+	app.Use(moduleMiddleware)
+	app.Get("/user", handler)
+	return app
+}
+
+func main() {
+	app := fastrex.New()
+	app.Register(module, "/api")
+	err := app.Listen(9000)
+	if err != nil {
+		panic(err)
+	}
+}
+
+```
+## Template & Render
+You can render html by create HTML template at `template` folder.
+```html
+<html>{{.Title}}{{.Name}}</html>
+```
+Then you add them with `Template` function. And finally, call `Render` function from handler.
+```go
+package main
+
+import "github.com/fastrodev/fastrex"
+
+func handler(req fastrex.Request, res fastrex.Response) {
+	data := struct {
+		Title string
+		Name  string
+	}{
+		"hallo",
+		"world",
+	}
+	err := res.Render(data)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	app := fastrex.New()
+	app.Template("template/app.html")
+	app.Get("/", handler)
+	err := app.Listen(9000)
+	if err != nil {
+		panic(err)
+	}
+}
+
 ```
 ## Serverless deployment
 

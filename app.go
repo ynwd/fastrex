@@ -166,7 +166,9 @@ func (r *app) Register(app Fastrex, url ...string) App {
 	newApp := app(New())
 	if len(url) > 0 {
 		r.apps[url[0]] = newApp
+		return r
 	}
+
 	r.apps[""] = newApp
 	return r
 }

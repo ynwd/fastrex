@@ -110,9 +110,9 @@ func (h *httpHandler) loopMiddleware(
 			*requestMid,
 			responseMid,
 			func(req Request, res Response) {
-				next = true
 				request = req
 				response = res
+				next = true
 				e, ok := req.Context().Value(errMiddlewareKey).(ErrMiddleware)
 				if ok {
 					next = false
