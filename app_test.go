@@ -523,11 +523,7 @@ func Test_app_GetDependency(t *testing.T) {
 				container: map[string]interface{}{
 					"app": "app",
 				},
-				routes:       map[string]AppRoute{},
-				middlewares:  []Middleware{},
-				server:       &http.Server{},
-				staticFolder: "",
-				staticPath:   "",
+				server: &http.Server{},
 			},
 			wantContainer: "app",
 		},
@@ -535,10 +531,11 @@ func Test_app_GetDependency(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := New()
-			got := r.SetDependency(tt.args.name, tt.args.i)
-			c := r.GetDependency("app")
+			got := r.Add(tt.args.name, tt.args.i)
+			c := r.Dependency("app")
 			// if !reflect.DeepEqual(got, tt.want) {
-			// 	t.Errorf("app.GetDependency() = %v, want %v", got, tt.want)
+			// 	t.Errorf("app.GetDependency() want %v", tt.want)
+			// 	t.Errorf("app.GetDependency() want %v", got)
 			// }
 			if !reflect.DeepEqual(c, tt.wantContainer) {
 				t.Errorf("app.GetDependency() = %v, want %v", got, tt.wantContainer)

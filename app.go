@@ -18,9 +18,9 @@ type App interface {
 	// Add app module
 	Register(app Fastrex, url ...string) App
 	// Sets Dependency
-	SetDependency(name string, i interface{}) App
+	Add(name string, i interface{}) App
 	// Get Dependency
-	GetDependency(name string) interface{}
+	Dependency(name string) interface{}
 	// Routes HTTP GET requests to the specified path with the specified callback functions.
 	Get(string, Handler, ...Middleware) App
 	// Routes HTTP CONNECT requests to the specified path with the specified callback functions
@@ -92,6 +92,8 @@ type App interface {
 	Shutdown(ctx context.Context)
 
 	Routes() map[string]AppRoute
+
+	Middleware() []Middleware
 }
 
 // Handler ...
@@ -152,6 +154,10 @@ func New() App {
 	}
 }
 
+func (r *app) Middleware() []Middleware {
+	return r.middlewares
+}
+
 func (r *app) Routes() map[string]AppRoute {
 	return r.routes
 }
@@ -160,17 +166,19 @@ func (r *app) Register(app Fastrex, url ...string) App {
 	newApp := app(New())
 	if len(url) > 0 {
 		r.apps[url[0]] = newApp
+		return r
 	}
+
 	r.apps[""] = newApp
 	return r
 }
 
-func (r *app) SetDependency(name string, i interface{}) App {
+func (r *app) Add(name string, i interface{}) App {
 	r.container[name] = i
 	return r
 }
 
-func (r *app) GetDependency(name string) interface{} {
+func (r *app) Dependency(name string) interface{} {
 	return r.container[name]
 }
 
@@ -202,9 +210,9 @@ func (r *app) mutate() {
 				handler:     route.handler,
 				middlewares: route.middlewares,
 			}
-			fmt.Println("new-->", newKey)
 			r.routes[newKey] = newRoute
 		}
+		r.middlewares = append(r.middlewares, app.Middleware()...)
 	}
 }
 
