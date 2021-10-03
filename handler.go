@@ -36,49 +36,49 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.logger != nil {
 		h.logger.Println(r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	}
-
 	if h.ctx != nil {
 		r = r.WithContext(h.ctx)
 	}
-
 	key := h.getRouteKey(r.Method, r.URL.Path)
 	route, ok := h.routes[key]
 	if !ok {
 		folder := h.staticFolder
 		path := h.staticPath
-
 		if len(h.moduleStaticFolder) > 0 {
-			modFolder, ok := h.moduleStaticFolder[r.URL.Path]
-			if ok {
-				folder = modFolder
+			for k, _ := range h.moduleStaticFolder {
+				if strings.HasPrefix(r.URL.Path, k) {
+					folder = h.moduleStaticFolder[k]
+					break
+				}
 			}
 		}
-
 		if len(h.moduleStaticPath) > 0 {
-			modPath, ok := h.moduleStaticPath[r.URL.Path]
-			if ok {
-				path = modPath
+			for k, _ := range h.moduleStaticPath {
+				if strings.HasPrefix(r.URL.Path, k) {
+					path = k
+					break
+				}
 			}
 		}
-
 		if h.serverless {
 			folder = serverlessFolder + h.staticFolder
 		}
-
 		if path == "" {
 			path = "/"
 		}
 		if folder == "" {
 			folder = "tmp"
 		}
+		if strings.HasSuffix(r.URL.Path, path) {
+			http.NotFound(w, r)
+			return
+		}
 		fileHandler := http.FileServer(http.Dir(folder))
 		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
 		return
 	}
 
-	if len(h.moduleMiddlewares) > 0 ||
-		len(h.middlewares) > 0 ||
-		len(route.middlewares) > 0 {
+	if len(h.moduleMiddlewares) > 0 || len(h.middlewares) > 0 || len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
 		route.handler(
@@ -124,7 +124,9 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 		}
 	}
 
-	route.handler(request, response)
+	if next {
+		route.handler(request, response)
+	}
 }
 
 func (h *httpHandler) loopMiddleware(

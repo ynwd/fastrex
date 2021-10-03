@@ -227,13 +227,23 @@ func (r *app) Ctx(ctx context.Context) App {
 }
 
 func (r *app) mutate() {
-	var newPath string
 	for url, app := range r.apps {
+		newPath := url
+		if url == "" {
+			newPath = "/"
+		}
+		if len(app.Middleware()) > 0 {
+			r.moduleMiddlewares[newPath] = app.Middleware()
+		}
+		if len(app.StaticFolder()) > 0 {
+			r.moduleStaticFolder[newPath] = app.StaticFolder()
+		}
+		if len(app.StaticPath()) > 0 {
+			r.moduleStaticPath[newPath] = app.StaticPath()
+		}
+		r.filename = append(r.filename, app.Templates()...)
 		for _, route := range app.Routes() {
 			newPath = url + route.path
-			if newPath == "" {
-				newPath = "/"
-			}
 			newKey := route.method + splitter + newPath
 			newRoute := AppRoute{
 				path:        newPath,
@@ -242,11 +252,11 @@ func (r *app) mutate() {
 				middlewares: route.middlewares,
 			}
 			r.routes[newKey] = newRoute
+			if len(app.Middleware()) > 0 {
+				r.moduleMiddlewares[newPath] = app.Middleware()
+			}
 		}
-		r.filename = append(r.filename, app.Templates()...)
-		r.moduleMiddlewares[newPath] = app.Middleware()
-		r.moduleStaticFolder[newPath] = app.StaticFolder()
-		r.moduleStaticPath[newPath] = app.StaticPath()
+
 	}
 
 	if len(r.filename) > 0 {
