@@ -108,8 +108,8 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 	}
 
 	if lengthOfModuleMiddleware > 0 {
-		mid := h.moduleMiddlewares[r.URL.Path]
-		if mid != nil {
+		mid, ok := h.moduleMiddlewares[r.URL.Path]
+		if ok {
 			next, request, response = h.loopMiddleware(route, mid, w, r, lengthOfModuleMiddleware)
 		}
 		if !next {
@@ -124,9 +124,7 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 		}
 	}
 
-	if next {
-		route.handler(request, response)
-	}
+	route.handler(request, response)
 }
 
 func (h *httpHandler) loopMiddleware(
