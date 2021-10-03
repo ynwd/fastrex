@@ -107,7 +107,7 @@ func main() {
 ```
 
 ## Module
-You can group urls, routes, and handlers with `Register()`.
+You can group static files, paths, routes, middlewares, and handlers into a module.
 ```go
 package main
 
