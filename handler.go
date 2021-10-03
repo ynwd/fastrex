@@ -17,16 +17,17 @@ const (
 )
 
 type httpHandler struct {
-	apps         map[string]App
-	container    map[string]interface{}
-	routes       map[string]AppRoute
-	middlewares  []Middleware
-	template     *template.Template
-	logger       *log.Logger
-	ctx          context.Context
-	staticFolder string
-	staticPath   string
-	serverless   bool
+	apps              map[string]App
+	container         map[string]interface{}
+	routes            map[string]AppRoute
+	template          *template.Template
+	logger            *log.Logger
+	ctx               context.Context
+	staticFolder      string
+	staticPath        string
+	serverless        bool
+	middlewares       []Middleware
+	moduleMiddlewares map[string][]Middleware
 }
 
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +58,9 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(h.middlewares) > 0 || len(route.middlewares) > 0 {
+	if len(h.moduleMiddlewares) > 0 ||
+		len(h.middlewares) > 0 ||
+		len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
 		route.handler(
@@ -74,8 +77,10 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 		request  Request
 		response Response
 	)
-	lengthOfRouteMiddleware := len(route.middlewares)
+
 	lengthOfAppMiddleware := len(h.middlewares)
+	lengthOfModuleMiddleware := len(h.moduleMiddlewares)
+	lengthOfRouteMiddleware := len(route.middlewares)
 
 	if lengthOfAppMiddleware > 0 {
 		next, request, response = h.loopMiddleware(route, h.middlewares, w, r, lengthOfAppMiddleware)
@@ -84,8 +89,21 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 		}
 	}
 
+	if lengthOfModuleMiddleware > 0 {
+		mid := h.moduleMiddlewares[r.URL.Path]
+		if mid != nil {
+			next, request, response = h.loopMiddleware(route, mid, w, r, lengthOfModuleMiddleware)
+		}
+		if !next {
+			return
+		}
+	}
+
 	if lengthOfRouteMiddleware > 0 {
 		next, request, response = h.loopMiddleware(route, route.middlewares, w, r, lengthOfRouteMiddleware)
+		if !next {
+			return
+		}
 	}
 
 	if next {

@@ -124,19 +124,20 @@ type AppRoute struct {
 }
 
 type app struct {
-	logger       *log.Logger
-	server       *http.Server
-	template     *template.Template
-	ctx          context.Context
-	container    map[string]interface{}
-	routes       map[string]AppRoute
-	filename     []string
-	middlewares  []Middleware
-	serverless   bool
-	staticFolder string
-	staticPath   string
-	host         string
-	apps         map[string]App
+	logger            *log.Logger
+	server            *http.Server
+	template          *template.Template
+	ctx               context.Context
+	container         map[string]interface{}
+	routes            map[string]AppRoute
+	filename          []string
+	serverless        bool
+	staticFolder      string
+	staticPath        string
+	host              string
+	apps              map[string]App
+	middlewares       []Middleware
+	moduleMiddlewares map[string][]Middleware
 }
 
 const (
@@ -146,13 +147,14 @@ const (
 // New ...
 func New() App {
 	return &app{
-		apps:         map[string]App{},
-		container:    map[string]interface{}{},
-		routes:       map[string]AppRoute{},
-		middlewares:  []Middleware{},
-		server:       &http.Server{},
-		staticFolder: "",
-		staticPath:   "",
+		apps:              map[string]App{},
+		container:         map[string]interface{}{},
+		routes:            map[string]AppRoute{},
+		middlewares:       []Middleware{},
+		moduleMiddlewares: map[string][]Middleware{},
+		server:            &http.Server{},
+		staticFolder:      "",
+		staticPath:        "",
 	}
 }
 
@@ -206,9 +208,10 @@ func (r *app) Ctx(ctx context.Context) App {
 }
 
 func (r *app) mutate() {
+	var newPath string
 	for url, app := range r.apps {
 		for _, route := range app.Routes() {
-			newPath := url + route.path
+			newPath = url + route.path
 			newKey := route.method + splitter + newPath
 			newRoute := AppRoute{
 				path:        newPath,
@@ -218,7 +221,7 @@ func (r *app) mutate() {
 			}
 			r.routes[newKey] = newRoute
 		}
-		r.middlewares = append(r.middlewares, app.Middleware()...)
+		r.moduleMiddlewares[newPath] = app.Middleware()
 		r.filename = append(r.filename, app.Templates()...)
 	}
 
@@ -236,16 +239,17 @@ func (r *app) handler(serverless bool) http.Handler {
 	}
 
 	return &httpHandler{
-		r.apps,
-		r.container,
-		r.routes,
-		r.middlewares,
-		r.template,
-		r.logger,
-		r.ctx,
-		r.staticFolder,
-		r.staticPath,
-		serverless,
+		apps:              r.apps,
+		container:         r.container,
+		routes:            r.routes,
+		template:          r.template,
+		logger:            r.logger,
+		ctx:               r.ctx,
+		staticFolder:      r.staticFolder,
+		staticPath:        r.staticPath,
+		serverless:        serverless,
+		middlewares:       r.middlewares,
+		moduleMiddlewares: r.moduleMiddlewares,
 	}
 }
 

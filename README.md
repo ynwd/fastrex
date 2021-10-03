@@ -14,7 +14,7 @@ Fast and simple web application framework for Go inspired by the most popular no
 Init folder and install:
 ```
 mkdir app && cd app
-go mod init github.com/fastrodev/serverless
+go mod init app
 go get github.com/fastrodev/fastrex
 ```
 Create main.go file:
