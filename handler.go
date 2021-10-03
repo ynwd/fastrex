@@ -17,17 +17,19 @@ const (
 )
 
 type httpHandler struct {
-	apps              map[string]App
-	container         map[string]interface{}
-	routes            map[string]AppRoute
-	template          *template.Template
-	logger            *log.Logger
-	ctx               context.Context
-	staticFolder      string
-	staticPath        string
-	serverless        bool
-	middlewares       []Middleware
-	moduleMiddlewares map[string][]Middleware
+	apps               map[string]App
+	container          map[string]interface{}
+	routes             map[string]AppRoute
+	template           *template.Template
+	logger             *log.Logger
+	ctx                context.Context
+	serverless         bool
+	staticFolder       string
+	moduleStaticFolder map[string]string
+	staticPath         string
+	moduleStaticPath   map[string]string
+	middlewares        []Middleware
+	moduleMiddlewares  map[string][]Middleware
 }
 
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -44,9 +46,25 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		folder := h.staticFolder
 		path := h.staticPath
+
+		if len(h.moduleStaticFolder) > 0 {
+			modFolder, ok := h.moduleStaticFolder[r.URL.Path]
+			if ok {
+				folder = modFolder
+			}
+		}
+
+		if len(h.moduleStaticPath) > 0 {
+			modPath, ok := h.moduleStaticPath[r.URL.Path]
+			if ok {
+				path = modPath
+			}
+		}
+
 		if h.serverless {
 			folder = serverlessFolder + h.staticFolder
 		}
+
 		if path == "" {
 			path = "/"
 		}

@@ -96,6 +96,10 @@ type App interface {
 	Middleware() []Middleware
 
 	Templates() []string
+
+	StaticFolder() string
+
+	StaticPath() string
 }
 
 // Handler ...
@@ -124,20 +128,25 @@ type AppRoute struct {
 }
 
 type app struct {
-	logger            *log.Logger
-	server            *http.Server
-	template          *template.Template
-	ctx               context.Context
-	container         map[string]interface{}
-	routes            map[string]AppRoute
-	filename          []string
-	serverless        bool
-	staticFolder      string
-	staticPath        string
+	logger     *log.Logger
+	server     *http.Server
+	template   *template.Template
+	ctx        context.Context
+	container  map[string]interface{}
+	routes     map[string]AppRoute
+	filename   []string
+	serverless bool
+
 	host              string
 	apps              map[string]App
 	middlewares       []Middleware
 	moduleMiddlewares map[string][]Middleware
+
+	staticFolder       string
+	moduleStaticFolder map[string]string
+
+	staticPath       string
+	moduleStaticPath map[string]string
 }
 
 const (
@@ -147,15 +156,25 @@ const (
 // New ...
 func New() App {
 	return &app{
-		apps:              map[string]App{},
-		container:         map[string]interface{}{},
-		routes:            map[string]AppRoute{},
-		middlewares:       []Middleware{},
-		moduleMiddlewares: map[string][]Middleware{},
-		server:            &http.Server{},
-		staticFolder:      "",
-		staticPath:        "",
+		apps:               map[string]App{},
+		container:          map[string]interface{}{},
+		routes:             map[string]AppRoute{},
+		middlewares:        []Middleware{},
+		moduleMiddlewares:  map[string][]Middleware{},
+		server:             &http.Server{},
+		staticFolder:       "",
+		moduleStaticFolder: map[string]string{},
+		staticPath:         "",
+		moduleStaticPath:   map[string]string{},
 	}
+}
+
+func (r *app) StaticFolder() string {
+	return r.staticFolder
+}
+
+func (r *app) StaticPath() string {
+	return r.staticPath
 }
 
 func (r *app) Templates() []string {
@@ -212,6 +231,9 @@ func (r *app) mutate() {
 	for url, app := range r.apps {
 		for _, route := range app.Routes() {
 			newPath = url + route.path
+			if newPath == "" {
+				newPath = "/"
+			}
 			newKey := route.method + splitter + newPath
 			newRoute := AppRoute{
 				path:        newPath,
@@ -221,8 +243,10 @@ func (r *app) mutate() {
 			}
 			r.routes[newKey] = newRoute
 		}
-		r.moduleMiddlewares[newPath] = app.Middleware()
 		r.filename = append(r.filename, app.Templates()...)
+		r.moduleMiddlewares[newPath] = app.Middleware()
+		r.moduleStaticFolder[newPath] = app.StaticFolder()
+		r.moduleStaticPath[newPath] = app.StaticPath()
 	}
 
 	if len(r.filename) > 0 {
@@ -239,17 +263,19 @@ func (r *app) handler(serverless bool) http.Handler {
 	}
 
 	return &httpHandler{
-		apps:              r.apps,
-		container:         r.container,
-		routes:            r.routes,
-		template:          r.template,
-		logger:            r.logger,
-		ctx:               r.ctx,
-		staticFolder:      r.staticFolder,
-		staticPath:        r.staticPath,
-		serverless:        serverless,
-		middlewares:       r.middlewares,
-		moduleMiddlewares: r.moduleMiddlewares,
+		apps:               r.apps,
+		container:          r.container,
+		routes:             r.routes,
+		template:           r.template,
+		logger:             r.logger,
+		ctx:                r.ctx,
+		staticFolder:       r.staticFolder,
+		moduleStaticFolder: r.moduleStaticFolder,
+		staticPath:         r.staticPath,
+		moduleStaticPath:   r.moduleStaticPath,
+		serverless:         serverless,
+		middlewares:        r.middlewares,
+		moduleMiddlewares:  r.moduleMiddlewares,
 	}
 }
 
