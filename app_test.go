@@ -16,13 +16,14 @@ func TestNew(t *testing.T) {
 		{
 			name: "success",
 			want: &app{
-				apps:         map[string]App{},
-				container:    make(map[string]interface{}),
-				routes:       map[string]AppRoute{},
-				middlewares:  []Middleware{},
-				server:       &http.Server{},
-				staticFolder: "",
-				staticPath:   "",
+				apps:              map[string]App{},
+				container:         make(map[string]interface{}),
+				routes:            map[string]AppRoute{},
+				middlewares:       []Middleware{},
+				moduleMiddlewares: map[string][]Middleware{},
+				server:            &http.Server{},
+				staticFolder:      "",
+				staticPath:        "",
 			},
 		},
 	}
