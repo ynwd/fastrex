@@ -228,6 +228,9 @@ func (r *app) Ctx(ctx context.Context) App {
 
 func (r *app) mutate() {
 	for url, app := range r.apps {
+		if url == "" {
+			url = "/"
+		}
 		newPath := url
 		if len(app.Middleware()) > 0 {
 			r.moduleMiddlewares[newPath] = app.Middleware()
