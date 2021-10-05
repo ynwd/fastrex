@@ -229,9 +229,6 @@ func (r *app) Ctx(ctx context.Context) App {
 func (r *app) mutate() {
 	for url, app := range r.apps {
 		newPath := url
-		if url == "" {
-			newPath = "/"
-		}
 		if len(app.Middleware()) > 0 {
 			r.moduleMiddlewares[newPath] = app.Middleware()
 		}
@@ -243,6 +240,9 @@ func (r *app) mutate() {
 		}
 		r.filename = append(r.filename, app.Templates()...)
 		for _, route := range app.Routes() {
+			if route.path == "/" {
+				route.path = ""
+			}
 			newPath = url + route.path
 			newKey := route.method + splitter + newPath
 			newRoute := AppRoute{
