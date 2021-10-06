@@ -259,7 +259,7 @@ func (r *app) mutate() {
 				r.moduleMiddlewares[newPath] = app.Middleware()
 			}
 		}
-
+		// fmt.Println("newPath", newPath)
 	}
 
 	if len(r.filename) > 0 {

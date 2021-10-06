@@ -4,6 +4,7 @@ import (
 	"context"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"regexp"
 	"strings"
@@ -32,6 +33,20 @@ type httpHandler struct {
 	moduleMiddlewares  map[string][]Middleware
 }
 
+func (h *httpHandler) getStaticFolderKey(url string, list map[string]string) string {
+	max := math.MaxInt16
+	var rslt string
+	for k := range list {
+		n := strings.Replace(url, k, "", 1)
+		q := len(n)
+		if q < max {
+			max = q
+			rslt = k
+		}
+	}
+	return rslt
+}
+
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.logger != nil {
 		h.logger.Println(r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
@@ -45,17 +60,25 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		folder := h.staticFolder
 		path := h.staticPath
 		if len(h.moduleStaticFolder) > 0 {
-			for k, _ := range h.moduleStaticFolder {
-				if strings.HasPrefix(r.URL.Path, k) {
-					folder = h.moduleStaticFolder[k]
+			for range h.moduleStaticFolder {
+				staticFolderKey := h.getStaticFolderKey(r.URL.Path, h.moduleStaticFolder)
+				if strings.HasPrefix(r.URL.Path, staticFolderKey) {
+					folder = h.moduleStaticFolder[staticFolderKey]
 					break
 				}
 			}
 		}
 		if len(h.moduleStaticPath) > 0 {
-			for k, _ := range h.moduleStaticPath {
-				if strings.HasPrefix(r.URL.Path, k) {
-					path = k
+			for k, p := range h.moduleStaticPath {
+				if p == "/" {
+					p = ""
+				}
+				newPath := k + p
+				if newPath == "/" {
+					continue
+				}
+				if strings.HasPrefix(r.URL.Path, newPath) {
+					path = newPath
 					break
 				}
 			}
@@ -69,10 +92,7 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if folder == "" {
 			folder = "tmp"
 		}
-		if strings.HasSuffix(r.URL.Path, path) {
-			http.NotFound(w, r)
-			return
-		}
+
 		fileHandler := http.FileServer(http.Dir(folder))
 		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
 		return
