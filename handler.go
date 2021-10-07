@@ -92,7 +92,10 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if folder == "" {
 			folder = "tmp"
 		}
-
+		if strings.HasSuffix(r.URL.Path, path) {
+			http.NotFound(w, r)
+			return
+		}
 		fileHandler := http.FileServer(http.Dir(folder))
 		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
 		return
