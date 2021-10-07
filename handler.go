@@ -47,6 +47,50 @@ func (h *httpHandler) getStaticFolderKey(url string, list map[string]string) str
 	return rslt
 }
 
+func (h *httpHandler) handleNotFoundRouteKey(w http.ResponseWriter, r *http.Request) {
+	folder := h.staticFolder
+	path := h.staticPath
+	if len(h.moduleStaticFolder) > 0 {
+		for range h.moduleStaticFolder {
+			staticFolderKey := h.getStaticFolderKey(r.URL.Path, h.moduleStaticFolder)
+			if strings.HasPrefix(r.URL.Path, staticFolderKey) {
+				folder = h.moduleStaticFolder[staticFolderKey]
+				break
+			}
+		}
+	}
+	if len(h.moduleStaticPath) > 0 {
+		for k, p := range h.moduleStaticPath {
+			if p == "/" {
+				p = ""
+			}
+			newPath := k + p
+			if newPath == "/" {
+				continue
+			}
+			if strings.HasPrefix(r.URL.Path, newPath) {
+				path = newPath
+				break
+			}
+		}
+	}
+	if h.serverless {
+		folder = serverlessFolder + h.staticFolder
+	}
+	if path == "" {
+		path = "/"
+	}
+	if folder == "" {
+		folder = "tmp"
+	}
+	if strings.HasSuffix(r.URL.Path, path) {
+		http.NotFound(w, r)
+		return
+	}
+	fileHandler := http.FileServer(http.Dir(folder))
+	http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
+}
+
 func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h.logger != nil {
 		h.logger.Println(r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
@@ -57,47 +101,7 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	key := h.getRouteKey(r.Method, r.URL.Path)
 	route, ok := h.routes[key]
 	if !ok {
-		folder := h.staticFolder
-		path := h.staticPath
-		if len(h.moduleStaticFolder) > 0 {
-			for range h.moduleStaticFolder {
-				staticFolderKey := h.getStaticFolderKey(r.URL.Path, h.moduleStaticFolder)
-				if strings.HasPrefix(r.URL.Path, staticFolderKey) {
-					folder = h.moduleStaticFolder[staticFolderKey]
-					break
-				}
-			}
-		}
-		if len(h.moduleStaticPath) > 0 {
-			for k, p := range h.moduleStaticPath {
-				if p == "/" {
-					p = ""
-				}
-				newPath := k + p
-				if newPath == "/" {
-					continue
-				}
-				if strings.HasPrefix(r.URL.Path, newPath) {
-					path = newPath
-					break
-				}
-			}
-		}
-		if h.serverless {
-			folder = serverlessFolder + h.staticFolder
-		}
-		if path == "" {
-			path = "/"
-		}
-		if folder == "" {
-			folder = "tmp"
-		}
-		if strings.HasSuffix(r.URL.Path, path) {
-			http.NotFound(w, r)
-			return
-		}
-		fileHandler := http.FileServer(http.Dir(folder))
-		http.StripPrefix(path, fileHandler).ServeHTTP(w, r)
+		h.handleNotFoundRouteKey(w, r)
 		return
 	}
 
