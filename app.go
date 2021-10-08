@@ -255,11 +255,7 @@ func (r *app) mutate() {
 				middlewares: route.middlewares,
 			}
 			r.routes[newKey] = newRoute
-			if len(app.Middleware()) > 0 {
-				r.moduleMiddlewares[newPath] = app.Middleware()
-			}
 		}
-		// fmt.Println("newPath", newPath)
 	}
 
 	if len(r.filename) > 0 {

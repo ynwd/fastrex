@@ -33,10 +33,27 @@ type httpHandler struct {
 	moduleMiddlewares  map[string][]Middleware
 }
 
-func (h *httpHandler) getStaticFolderKey(url string, list map[string]string) string {
+func (h *httpHandler) getModuleStaticFolderKey(url string, list map[string]string) string {
 	max := math.MaxInt16
 	var rslt string
 	for k := range list {
+		n := strings.Replace(url, k, "", 1)
+		q := len(n)
+		if q < max {
+			max = q
+			rslt = k
+		}
+	}
+	return rslt
+}
+
+func (h *httpHandler) getModuleMiddlewareKey(url string, list map[string][]Middleware) string {
+	max := math.MaxInt16
+	var rslt string
+	for k := range list {
+		if !strings.HasPrefix(url, k) {
+			continue
+		}
 		n := strings.Replace(url, k, "", 1)
 		q := len(n)
 		if q < max {
@@ -52,7 +69,7 @@ func (h *httpHandler) handleNotFoundRouteKey(w http.ResponseWriter, r *http.Requ
 	path := h.staticPath
 	if len(h.moduleStaticFolder) > 0 {
 		for range h.moduleStaticFolder {
-			staticFolderKey := h.getStaticFolderKey(r.URL.Path, h.moduleStaticFolder)
+			staticFolderKey := h.getModuleStaticFolderKey(r.URL.Path, h.moduleStaticFolder)
 			if strings.HasPrefix(r.URL.Path, staticFolderKey) {
 				folder = h.moduleStaticFolder[staticFolderKey]
 				break
@@ -105,7 +122,9 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(h.moduleMiddlewares) > 0 || len(h.middlewares) > 0 || len(route.middlewares) > 0 {
+	if len(h.middlewares) > 0 ||
+		len(h.moduleMiddlewares) > 0 ||
+		len(route.middlewares) > 0 {
 		h.handleMiddleware(route, w, r)
 	} else if route.handler != nil {
 		route.handler(
@@ -122,20 +141,18 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 		request  Request
 		response Response
 	)
-
 	lengthOfAppMiddleware := len(h.middlewares)
 	lengthOfModuleMiddleware := len(h.moduleMiddlewares)
 	lengthOfRouteMiddleware := len(route.middlewares)
-
 	if lengthOfAppMiddleware > 0 {
 		next, request, response = h.loopMiddleware(route, h.middlewares, w, r, lengthOfAppMiddleware)
 		if !next {
 			return
 		}
 	}
-
 	if lengthOfModuleMiddleware > 0 {
-		mid, ok := h.moduleMiddlewares[r.URL.Path]
+		key := h.getModuleMiddlewareKey(r.URL.Path, h.moduleMiddlewares)
+		mid, ok := h.moduleMiddlewares[key]
 		if ok {
 			next, request, response = h.loopMiddleware(route, mid, w, r, lengthOfModuleMiddleware)
 		}
@@ -143,14 +160,12 @@ func (h *httpHandler) handleMiddleware(route AppRoute,
 			return
 		}
 	}
-
 	if lengthOfRouteMiddleware > 0 {
 		next, request, response = h.loopMiddleware(route, route.middlewares, w, r, lengthOfRouteMiddleware)
 		if !next {
 			return
 		}
 	}
-
 	if next {
 		route.handler(request, response)
 	}
