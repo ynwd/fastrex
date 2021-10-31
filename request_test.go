@@ -189,7 +189,7 @@ func TestRequest_Context(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			r1.Context()
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		ctx := req.Context()
 		wantCtx := context.Background()
 		if ctx != wantCtx {
@@ -207,7 +207,7 @@ func TestRequest_AddCookie(t *testing.T) {
 			c.Name("name").Value("agus")
 			r1.AddCookie(c)
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 
 		got := Cookie{}
 		c, _ := req.Cookie("name")
@@ -231,7 +231,7 @@ func TestRequest_BasicAuth(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			username, password, ok = r1.BasicAuth()
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		wantUsername := "agus"
 		wantPassword := "password"
 		wantOk := true
@@ -250,7 +250,7 @@ func TestRequest_Clone(t *testing.T) {
 			got = req.Clone(ctx)
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 
 		want := *newRequest(req, nil, true, map[string]interface{}{})
 		want = want.WithContext(req.Context())
@@ -270,7 +270,7 @@ func TestRequest_UserAgent(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			got = r1.UserAgent()
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 
 		want := "test"
 		if got != want {
@@ -288,7 +288,7 @@ func TestRequest_Referer(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			got = r1.Referer()
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 
 		want := "test"
 		if got != want {
@@ -328,7 +328,7 @@ func TestRequest_FormFile(t *testing.T) {
 			_, _, err = req.FormFile("my_file")
 		}
 
-		handler.ServeHTTP(res, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(res, req, nil, nil, nil, map[string]interface{}{})
 
 		if res.Code != http.StatusOK {
 			t.Error("not 200")
@@ -348,7 +348,7 @@ func TestRequest_Write(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			err = r1.Write(&braw)
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if err != nil {
 			t.Errorf("Request.Write() = %v", err)
 		}
@@ -363,7 +363,7 @@ func TestRequest_WriteProxy(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			got = r1.WriteProxy(&braw)
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if got != nil {
 			t.Errorf("Request.WriteProxy() = %v", got)
 		}
@@ -377,7 +377,7 @@ func TestRequest_ErrorMiddleware(t *testing.T) {
 		var handler HandlerFunc = func(r1 Request, r2 Response) {
 			r = r1.ErrorMiddleware(errors.New("not found"), 404)
 		}
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		got := r.Context().Value(errMiddlewareKey)
 		want := ErrMiddleware{
 			Error: errors.New("not found"),
@@ -398,7 +398,7 @@ func TestRequest_MultipartReader(t *testing.T) {
 			_, err = r1.MultipartReader()
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if err != nil {
 			t.Errorf("Request.ErrorMiddleware() = %v", err)
 		}
@@ -414,7 +414,7 @@ func TestRequest_FormValue(t *testing.T) {
 			got = r1.FormValue("z")
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if got != "post" {
 			t.Errorf("Request.FormValue() = %v", got)
 		}
@@ -430,7 +430,7 @@ func TestRequest_ParseFrom(t *testing.T) {
 			err = r1.ParseForm()
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if err != nil {
 			t.Errorf("Request.ParseForm() = %v", err)
 		}
@@ -446,7 +446,7 @@ func TestRequest_GetDependency(t *testing.T) {
 			d = r1.GetDependency("oke")
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if d != 5 {
 			t.Errorf("Request.GetDependency() = %v", d)
 		}
@@ -492,7 +492,7 @@ binary data
 			err = r1.ParseMultipartForm(25)
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if err != nil {
 			t.Errorf("Request.ParseMultipartForm() = %v", err)
 		}
@@ -507,7 +507,7 @@ func TestRequest_ProtoAtLeast(t *testing.T) {
 			got = r1.ProtoAtLeast(1, 1)
 		}
 
-		handler.ServeHTTP(nil, req, nil, nil, map[string]interface{}{})
+		handler.ServeHTTP(nil, req, nil, nil, nil, map[string]interface{}{})
 		if !got {
 			t.Errorf("Request.ProtoAtLeast() = %v", got)
 		}

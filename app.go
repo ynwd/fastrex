@@ -130,7 +130,6 @@ type AppRoute struct {
 type app struct {
 	logger     *log.Logger
 	server     *http.Server
-	template   *template.Template
 	ctx        context.Context
 	container  map[string]interface{}
 	routes     map[string]AppRoute
@@ -147,6 +146,9 @@ type app struct {
 
 	staticPath       string
 	moduleStaticPath map[string]string
+
+	template       *template.Template
+	moduleTemplate map[string]*template.Template
 }
 
 const (
@@ -166,6 +168,7 @@ func New() App {
 		moduleStaticFolder: map[string]string{},
 		staticPath:         "",
 		moduleStaticPath:   map[string]string{},
+		moduleTemplate:     map[string]*template.Template{},
 	}
 }
 
@@ -241,7 +244,16 @@ func (r *app) mutate() {
 		if len(app.StaticPath()) > 0 {
 			r.moduleStaticPath[newPath] = app.StaticPath()
 		}
-		r.filename = append(r.filename, app.Templates()...)
+		if len(app.Templates()) > 0 {
+			fmt.Println("app.Templates()", app.Templates())
+			tmpl, err := template.ParseFiles(app.Templates()...)
+			fmt.Println("tmpl", tmpl)
+			if err != nil {
+				panic(err)
+			}
+			r.moduleTemplate[newPath] = tmpl
+		}
+
 		for _, route := range app.Routes() {
 			if route.path == "/" {
 				route.path = ""
@@ -275,7 +287,6 @@ func (r *app) handler(serverless bool) http.Handler {
 		apps:               r.apps,
 		container:          r.container,
 		routes:             r.routes,
-		template:           r.template,
 		logger:             r.logger,
 		ctx:                r.ctx,
 		staticFolder:       r.staticFolder,
@@ -285,6 +296,8 @@ func (r *app) handler(serverless bool) http.Handler {
 		serverless:         serverless,
 		middlewares:        r.middlewares,
 		moduleMiddlewares:  r.moduleMiddlewares,
+		template:           r.template,
+		moduleTemplate:     r.moduleTemplate,
 	}
 }
 

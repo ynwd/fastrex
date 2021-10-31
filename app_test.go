@@ -2,6 +2,7 @@ package fastrex
 
 import (
 	"context"
+	"html/template"
 	"log"
 	"net/http"
 	"reflect"
@@ -26,6 +27,7 @@ func TestNew(t *testing.T) {
 				moduleStaticFolder: map[string]string{},
 				staticPath:         "",
 				moduleStaticPath:   map[string]string{},
+				moduleTemplate:     map[string]*template.Template{},
 			},
 		},
 	}

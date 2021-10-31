@@ -21,7 +21,6 @@ type httpHandler struct {
 	apps               map[string]App
 	container          map[string]interface{}
 	routes             map[string]AppRoute
-	template           *template.Template
 	logger             *log.Logger
 	ctx                context.Context
 	serverless         bool
@@ -31,6 +30,8 @@ type httpHandler struct {
 	moduleStaticPath   map[string]string
 	middlewares        []Middleware
 	moduleMiddlewares  map[string][]Middleware
+	template           *template.Template
+	moduleTemplate     map[string]*template.Template
 }
 
 func (h *httpHandler) getModuleStaticFolderKey(url string, list map[string]string) string {
@@ -129,7 +130,7 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if route.handler != nil {
 		route.handler(
 			*newRequest(r, h.routes, h.serverless, h.container),
-			newResponse(w, r, h.template),
+			newResponse(w, r, h.template, h.moduleTemplate),
 		)
 	}
 }
@@ -182,7 +183,7 @@ func (h *httpHandler) loopMiddleware(
 		response Response
 	)
 	for i := range middlewares {
-		responseMid := newResponse(w, r, h.template)
+		responseMid := newResponse(w, r, h.template, h.moduleTemplate)
 		requestMid := newRequest(r, h.routes, h.serverless, h.container)
 		middlewares[length-1-i](
 			*requestMid,
@@ -280,6 +281,8 @@ func (f HandlerFunc) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request,
 	route map[string]AppRoute,
-	template *template.Template, container map[string]interface{}) {
-	f(*newRequest(r, route, true, container), newResponse(w, r, template))
+	template *template.Template,
+	moduleTemplate map[string]*template.Template,
+	container map[string]interface{}) {
+	f(*newRequest(r, route, true, container), newResponse(w, r, template, moduleTemplate))
 }

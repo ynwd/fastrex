@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"math"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -56,12 +58,13 @@ type Response interface {
 	// Attachment() Response
 }
 
-func newResponse(w http.ResponseWriter, r *http.Request, t *template.Template) Response {
+func newResponse(w http.ResponseWriter, r *http.Request, t *template.Template, m map[string]*template.Template) Response {
 	return &httpResponse{
 		w: w,
 		r: r,
 		s: http.StatusOK,
 		t: t,
+		m: m,
 	}
 }
 
@@ -71,6 +74,7 @@ type httpResponse struct {
 	w http.ResponseWriter
 	r *http.Request
 	t *template.Template
+	m map[string]*template.Template
 }
 
 func (h *httpResponse) Header() http.Header {
@@ -181,9 +185,37 @@ func (h *httpResponse) Append(field string, value string) Response {
 	return h
 }
 
+func (h *httpResponse) getModuleTemplateKey(url string, list map[string]*template.Template) string {
+	max := math.MaxInt16
+	var rslt string
+	for k := range list {
+		n := strings.Replace(url, k, "", 1)
+		q := len(n)
+		if q < max {
+			max = q
+			rslt = k
+		}
+	}
+	return rslt
+}
+
 func (h *httpResponse) Render(args ...interface{}) error {
 	if h.t == nil {
-		return errors.New("empty template")
+		templateKey := ""
+		if len(h.m) > 0 {
+			for range h.m {
+				key := h.getModuleTemplateKey(h.r.URL.Path, h.m)
+				if strings.HasPrefix(h.r.URL.Path, key) {
+					templateKey = key
+					break
+				}
+			}
+		}
+		tmpl, ok := h.m[templateKey]
+		if !ok {
+			return errors.New("Render error: empty template")
+		}
+		h.t = tmpl
 	}
 	if h.c != nil {
 		c := h.c.cookie()
@@ -200,11 +232,11 @@ func (h *httpResponse) Render(args ...interface{}) error {
 		name := args[0].(string)
 		data := args[1]
 		if name == "" {
-			return errors.New("empty template name")
+			return errors.New("Render error: empty template name")
 		}
 		return template.Must(h.t.Clone()).ExecuteTemplate(h.w, name, data)
 	}
-	return errors.New("invalid args")
+	return errors.New("Render error: invalid args")
 }
 
 // TODO:
