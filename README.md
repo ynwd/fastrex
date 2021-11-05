@@ -113,17 +113,19 @@ package main
 
 import "github.com/fastrodev/fastrex"
 
+func moduleMiddleware(req fastrex.Request, res fastrex.Response, next fastrex.Next) {
+	if req.URL.Path == "/api/user" {
+		res.Send("userMiddleware")
+		return
+	}
+	next(req, res)
+}
+
+func handler(req fastrex.Request, res fastrex.Response) {
+	res.Send("userModule")
+}
+
 func module(app fastrex.App) fastrex.App {
-	moduleMiddleware := func(req fastrex.Request, res fastrex.Response, next fastrex.Next) {
-		if req.URL.Path == "/api/user" {
-			res.Send("userMiddleware")
-			return
-		}
-		next(req, res)
-	}
-	handler := func(req fastrex.Request, res fastrex.Response) {
-		res.Send("userModule")
-	}
 	app.Use(moduleMiddleware)
 	app.Get("/user", handler)
 	return app
@@ -207,7 +209,7 @@ func Main(w http.ResponseWriter, r *http.Request) {
 ```
 How to deploy:
 ```
-gcloud functions deploy Main --runtime go113 --trigger-http --allow-unauthenticated
+gcloud functions deploy Main --runtime go116 --trigger-http --allow-unauthenticated
 ```
 Demo and full example: [`https://github.com/fastrodev/serverless`](https://github.com/fastrodev/serverless)
 
